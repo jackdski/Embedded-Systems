@@ -1,131 +1,37 @@
-/**
- *
- *  Author: Jack Danielski
- *  Lab 1 ECEN 2240
- *  Due: 9/8/2017
- *
- */
+//Adam Smrekar
+//Riley Hadjis
+//Jack Danielski
+//Lab1
 
 #include "msp.h"
-#include "lab1.h"
 #include <stdint.h>
 
-
-void foo(uint8_t * ptr_a, uint32_t * ptr_b) {
-    *ptr_a += 2;
-    (*(uint8_t*)(ptr_b))++;
-    ptr_b++;
-}
-
-
-int main(void)
+void main(void)
 {
-    volatile unsigned int count = 0;
-    volatile unsigned int i = 0;
+    unsigned int count = 0;
+    unsigned int i = 0;
+    WDT_A->CTL = WDT_A_CTL_PW | WDT_A_CTL_HOLD;    // Stop watchdog timer
 
-    //WDT_A->CTL=WDT_A_CTL_PW | WDT_A_CTL_HOLD;             // Stop watchdog timer
-    WDT_A->CTL = WDT_A_CTL_PW | WDT_A_CTL_HOLD;
+    uint16_t * var1 = (uint16_t *)0xA274;
+    *var1 |= 0xC031;
+    *var1 &= 0x79FF;
+    *var1 ^= 0x0FF0;
 
-    //<CONFIGURE_P1.0_GENERAL_IO>   P1.0 to General IOMode
-    uint8_t * p1_in    = (uint8_t *)0x40004C00;
-    uint8_t * p1_dir   = (uint8_t *)0x40004C04;
-    uint8_t * p1_out   = (uint8_t *)0x40004C02;
-    uint8_t * p1_sel0  = (uint8_t *)0x40004C0A;
-    uint8_t * p1_sel1  = (uint8_t *)0x40004C0C;
+    uint8_t * P1_SEL0 = (uint8_t *) 0x40004C0A;   // P1.0 to General IOMode
+    uint8_t * P1_SEL1 = (uint8_t *) 0x40004C0C;
+    //uint8_t * P1_IN = (uint8_t *) 0x40004C00;
+    uint8_t * P1_OUT = (uint8_t *) 0x40004C02;
+    uint8_t * P1_DIR = (uint8_t *) 0x40004C04;
 
-    *p1_dir |= 0x01;            // P1.0 set as output direction
-    *p1_out &= ~0x01;            // P1.0 output low
-    *p1_sel0 = 0x0;
-    *p1_sel1 = 0x0;
-    /** 4
-     *
-     * 0xA274 = 0b1010_0010_0111_0100
-     * Set bits 0,4,5,14,15
-     * Use bitwise OR on var1 using 0b1100_0000_0011_0001
-     *
-     *      0b1010_0010_0111_0100
-     *      0b1100_0000_0011_0001
-     *    |  _____________________
-     *      0b1110_0010_0111_0101
-     *
-     */
-    uint16_t var1 = 0xA274;
-    var1 |= 0xC031;
+    *P1_SEL1 = 0x0;     // P1.0 set as output direction
+    *P1_SEL0 = 0x0;
+    *P1_DIR |= 0x1;
 
-    /*
-     *0
-     * Clear Bits 9,10,15
-     * Use bitwise & on var1 using 0b0111_1001_1111_1111
-     *  since only bits 9,10, and 11 need to be cleared.
-     *  This will keep all set bits except 9,10,and 11
-     *  without setting any bits not previously set.
-     *
-     *  0b0111_1001_1111_1111 = 0x7D83
-     *
-     *      0b1100_0000_0011_0001
-     *      0b0111_1001_1111_1111
-     *    & _____________________
-     *      0b0100_0000_0011_0001
-     *
-     */
-
-    var1 &= 0x7D83;
-
-    /*
-     *
-     * Toggle middle 8 bits
-     * Use bitwise ^ on var1 using 0b0000_1111_1111_0000
-     *  since the 8 bits in the middle that are already 1
-     *  will be turned off and the bits that are off will
-     *  be turned on.n
-     *
-     * 0b0000_1111_1111_0000 = 0x0FF0
-     *
-     *      0b0100_0000_0011_0001
-     *      0b0000_1111_1111_0000
-     *    ^  _____________________
-     *      0b0100_1111_1100_0001
-     *
-     *
-     */
-
-    var1 ^= 0x0FF0;
-
-/*
-    uint8_t memory[8] = {0x44, 0x10, 0x42, 0x32, 0x40, 0xFF, 0x67, 0xFF};
-
-    uint32_t * ptr1 = (uint32_t *)(&memory[0]);
-    uint8_t  * ptr2 = (uint8_t *)(&memory[2]);
-    (*(uint8_t*)(ptr1))>>=1;
-    ptr2++;
-    *ptr1 += 512;
-    foo(((uint8_t*)(&memory[5])), ptr1);
-    ptr1++;
-    *ptr1 -=4;
-    ptr2 += 2;
-    (*ptr2)++;
-    --*ptr1;
-*/
-    report_types();
-    report_pointer_types();
-
-    int y = 0;
-    while(y < 10) {
-        make_square_wave();
-        y++;
+    *P1_OUT = 0x0;      // P1.0 output low
+    //*P1_IN = 0x0;
+    while (1) {                    // continuous loop
+            count++;
+            *P1_OUT ^= 1;              // Blink P1.0 LED
+            for (i = 0; i < 30000; i++);    // Delay
     }
-
-    while (1) {
-        count++;
-        //  Blink P1.0 LED
-        //*p1_out ^= 0x01;
-
-        for (i = 0; i < 30000; i++); // Delay
-        *p1_out ^= 0x01;
-    }
-
-
-
-    return 0;
 }
-
