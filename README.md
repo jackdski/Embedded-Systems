@@ -1,1 +1,1 @@
-# ecen2440 embedded systems lab
+# ECEN 2440: Applications of Embedded Systems
