@@ -5,21 +5,43 @@
  *      Author: amabo
  */
 #include "port.h"
+uint8_t RGBControl = 0;
 
 void PORT1_IRQHandler(){
     int8_t flag1 = (P1->IFG & BIT1) >> 1;
     int8_t flag2 = (P1->IFG & BIT4) >> 4;
 
+    int8_t RGBMask = P2->OUT & (BIT0 | BIT1 | BIT2);
+
     if(flag1){
         P1->OUT ^= BIT0;
+        RGBControl++;
+        if(RGBMask == 7){
+            P2->OUT &= ~(BIT0 | BIT1 | BIT2);
+        }
+        else
+            P2->OUT += 1;
     }
     if(flag2){
         P1->OUT ^= BIT0;
+        RGBControl--;
+        if(RGBMask == 0){
+                    P2->OUT |= (BIT0 | BIT1 | BIT2);
+                }
+                else
+                    P2->OUT -= 1;
     }
 
-    P1->IFG &= CLEAR_FLAGS;
+    //RGBControl &= (BIT0 | BIT1 | BIT2);
 
+    //P2->OUT
+
+    P1->IFG &= CLEAR_FLAGS;
 }
+
+//P2_Set_LED(){
+
+//}
 
 // Configure the GPIO
 void GPIO_configure(void) {
@@ -61,6 +83,11 @@ void GPIO_configure(void) {
   P1->SEL1 &=  ~(BIT0);
   P1->DIR |=     BIT0;
   P1->OUT &=   ~(BIT0);
+
+  P2->SEL0 &=  ~(BIT0 | BIT1 | BIT2);
+  P2->SEL1 &=  ~(BIT0 | BIT1 | BIT2);
+  P2->DIR |=    (BIT0 | BIT1 | BIT2);
+  P2->OUT &=   ~(BIT0 | BIT1 | BIT2);
 
   /* Enable Interrupts in the NVIC */
   NVIC_EnableIRQ(PORT1_IRQn);
