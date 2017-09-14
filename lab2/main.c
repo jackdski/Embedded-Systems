@@ -5,7 +5,7 @@
 
 void main(void)
 {
-  unsigned int i;
+  volatile unsigned int i;
   WDT_A->CTL = (WDT_A_CTL_PW | WDT_A_CTL_HOLD);
 
   GPIO_configure();
@@ -13,10 +13,19 @@ void main(void)
 
   __enable_irq();
 
-    while (1){
-        P1->OUT ^= BIT0;
-        for(i = 0; i<200000; i++);
-    }
-}
+#if 0
+  //This is the pin set required to test the lattency of the interrupts
+  P1->OUT |= BIT7;
+  P1->IFG |= BIT1;
+#endif
 
+#if 0
+  while (1){
+      P1->OUT ^= BIT0;
+      for(i = 0; i<200000; i++);
+  }
+#endif
+
+  while (1);
+}
 
