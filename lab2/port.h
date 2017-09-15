@@ -11,11 +11,9 @@
 #include "msp.h"
 
 #define CLEAR_FLAGS (uint8_t) (~(BIT1 | BIT4))
-
-void ISR_FUNCTION_PORTS();
-
-
+#define STCSR       (*(uint32_t *)(0xE000E010))
+#define STCVR_CURR  (*(uint32_t *)(0xE000E018))
 
 void GPIO_configure(void);
 
-#endif /* PORT_H_ */
+#endif

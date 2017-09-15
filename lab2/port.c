@@ -9,20 +9,15 @@
 
 /* Handles interrupts from P1 */
 void PORT1_IRQHandler(){
-#if 0
     //When testing lattency, this will turn off the pin
     P1->OUT &= ~(BIT7);
-#endif
+    int currentSysTick = STCVR_CURR;
+    P1->OUT ^= BIT0;
 
-    int8_t flag1 = (P1->IFG & BIT1) >> 1;
-    int8_t flag2 = (P1->IFG & BIT4) >> 4;
-
-    uint8_t RGBControl = 0;
     int8_t RGBMask = P2->OUT & (BIT0 | BIT1 | BIT2);
 
     // Left button is pressed
-    if(flag1){
-        P1->OUT ^= BIT0;
+    if(P1->IFG & BIT1 >> 1) {
         if(RGBMask == 7){
             P2->OUT &= ~(BIT0 | BIT1 | BIT2);
         }
@@ -32,8 +27,7 @@ void PORT1_IRQHandler(){
     }
 
     // Right button is pressed
-    if(flag2){
-        P1->OUT ^= BIT0;
+    if(P1->IFG & BIT4 >> 4){
         if(RGBMask == 0){
                     P2->OUT |= (BIT0 | BIT1 | BIT2);
                 }
@@ -82,10 +76,10 @@ void GPIO_configure(void) {
 
 
   /* Configure Latency Test Output Pin (P1.7) */
-  P1->SEL0 &=  ~(BIT7 | BIT0);     //
-  P1->SEL1 &=  ~(BIT7 | BIT0);
-  P1->DIR |=     (BIT7 | BIT0);
-  P1->OUT &=   ~(BIT7 | BIT0);
+  P1->SEL0 &=  ~(BIT0 | BIT7);     //
+  P1->SEL1 &=  ~(BIT0 | BIT7);
+  P1->DIR |=    (BIT0 | BIT7);
+  P1->OUT &=   ~(BIT0 | BIT7);
 
   /* Configure Port 2 to be used for RGB LED*/
   P2->SEL0 &=  ~(BIT0 | BIT1 | BIT2);
