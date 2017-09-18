@@ -3,21 +3,30 @@
  * port.c
  *
  *  Created on: Sep 7, 2017
- *      Author: amabo and Jack 
+ *      Author: amabo and Jack
  */
 #include "port.h"
 
 /* Handles interrupts from P1 */
 void PORT1_IRQHandler(){
-    //When testing lattency, this will turn off the pin
-    P1->OUT &= ~(BIT7);
-    int currentSysTick = STCVR_CURR;
-    P1->OUT ^= BIT0;
+    //When testing latency into the function, this will turn off the pin
+    if(P1->IFG & (BIT1 | BIT4)){
+        P1->IE &= ~(BIT1 | BIT4);
+    }
+
+
+#if 0
+    //These if statements toggle pin one, tick through the RGB LED and turn
+    //off bit seven. There are used for all pre-timer parts of the lab.
+    if((P1->IFG & BIT1) || (P1->IFG & BIT4)){
+        P1->OUT ^= BIT0;
+        P1->OUT &= ~(BIT7);
+    }
 
     int8_t RGBMask = P2->OUT & (BIT0 | BIT1 | BIT2);
 
     // Left button is pressed
-    if(P1->IFG & BIT1 >> 1) {
+    if((P1->IFG & BIT1) >> 1){
         if(RGBMask == 7){
             P2->OUT &= ~(BIT0 | BIT1 | BIT2);
         }
@@ -27,7 +36,7 @@ void PORT1_IRQHandler(){
     }
 
     // Right button is pressed
-    if(P1->IFG & BIT4 >> 4){
+    if((P1->IFG & BIT4) >> 4){
         if(RGBMask == 0){
                     P2->OUT |= (BIT0 | BIT1 | BIT2);
                 }
@@ -35,9 +44,18 @@ void PORT1_IRQHandler(){
                     P2->OUT -= 1;
     }
 
+#endif
+    if((P1->IFG & (BIT1 | BIT4))){
+        P1->OUT ^= BIT0;
+        NVIC_EnableIRQ(TA0_0_IRQn);
+    }
 
-    P1->IFG &= CLEAR_FLAGS;
 
+    //P1->IFG &= CLEAR_FLAGS;
+
+    //NVIC_EnableIRQ(PORT1_IRQn);
+    //When testing out of the function, this will turn on the pin
+    //P1->OUT |= BIT7;
 }
 
 // Configure the GPIO pins
@@ -62,7 +80,6 @@ void GPIO_configure(void) {
   P1->OUT |=    BIT1;       // Enable PULLUP
   P1->IFG &=  ~(BIT1);      // Clear interrupts
   P1->IES =    BIT1;       // Set P1 IFG flag to high to low transition
-  P1->IE  =    BIT1;       // Enable port interrupt
 
   /* Right button configure*/
   P1->SEL0 &= ~(BIT4);      // Set P1.4 to General IO Mode
@@ -72,7 +89,6 @@ void GPIO_configure(void) {
   P1->OUT |=    BIT4;       // Enable PULLUP
   P1->IFG &=  ~(BIT4);      // Clear interrupts
   P1->IES |=    BIT4;       // Set P1 IFG flag to high-to-low transition
-  P1->IE |=     BIT4;       // Enable port interrupt
 
 
   /* Configure Latency Test Output Pin (P1.7) */
@@ -89,7 +105,8 @@ void GPIO_configure(void) {
 
 
   P1->IFG = 0;
+  P1->IE =  (BIT1 | BIT4);       // Enable port interrupt
   /* Enable Interrupts in the NVIC */
   NVIC_EnableIRQ(PORT1_IRQn);
-  //NVIC_EnableIRQ(PORT2_IRQn);
+  //NVIC->ISER[1] |= BIT3;
 }
