@@ -13,6 +13,7 @@ void TA0_0_IRQHandler() {
 
     TIMER_A0->CTL &= ~(BIT1);  //Turn off timer interrupts
 
+  #ifdef PROB10 
     /*In order to prevent future button presses from interrupting our timer, we
      * need to store the flag data, ie the interrupt that sent us here, in a global
      * variable. This if statement does this.
@@ -63,7 +64,6 @@ void TA0_0_IRQHandler() {
 
     }
 
-
     TIMER_A0->R = 0;
     //TIMER_A0->CTL &= ~0;//(BIT0);
     TIMER_A0->CCTL[0] &= ~(BIT0);
@@ -74,8 +74,9 @@ void TA0_0_IRQHandler() {
     }
     else
         extraBit++;
+#endif 
 
-#if 0
+#if )
     TIMER_A0->CTL &= ~(BIT1);  //Turn off timer interrupts
 
     P1->OUT ^= (BIT7 | BIT0);
