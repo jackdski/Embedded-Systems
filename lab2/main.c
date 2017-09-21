@@ -25,9 +25,11 @@ void main(void)
 
   __enable_irq();
 
+#ifdef PROB12 || PROB3B
   // SysTick Config
   SysTick->LOAD = 0X00FFFFFF;   // Give SysTick a starting value to count down from
   SysTick->CTRL = BIT0 | BIT2;  // Enable SysTick
+#endif
 
 #ifdef PROB3A
   //This is the pin set required to test the lattency of the interrupts
@@ -52,7 +54,9 @@ void main(void)
       distanceTraveled = beamBreaks * 0.9107;
 #endif
       //P1->OUT ^= BIT0;
-      //P1->IFG |= BIT5;
+#ifdef PROB12
+      P1->IFG |= BIT5;
+#endif
       //for(i = 0; i<200000; i++);
 
   }
