@@ -9,12 +9,25 @@
 
 /* Handles interrupts from P1 */
 void PORT1_IRQHandler(){
+#ifdef PROB3b
+  sysclock -= SysTick->VAL;
+#endif
+#ifdef PROB12
+    int latency_twelve = 0;
+    int execution = 0; 
+#endif
+    
     //When testing latency into the function, this will turn off the pin
     if(P1->IFG & (BIT1 | BIT4)){
         P1->IE &= ~(BIT1 | BIT4);
         NVIC_EnableIRQ(TA0_0_IRQn);
     }
 
+    // Prob. 11 P1.5 IFG
+    if (P1->IFG & BIT5) {
+        latency_twelve = part_twelve - SysTick->VAL;
+        beamBreaks++;
+    }
 
 
 #if 0
@@ -49,26 +62,26 @@ void PORT1_IRQHandler(){
 #endif
 
 
-    //P1->IFG &= CLEAR_FLAGS;
+    P1->IFG &= CLEAR_FLAGS;
 
     //NVIC_EnableIRQ(PORT1_IRQn);
     //When testing out of the function, this will turn on the pin
     //P1->OUT |= BIT7;
+    execution = part_twelve - SysTick->VAL;
 }
 
 // Configure the GPIO pins
 void GPIO_configure(void) {
 
-    /*
-  //data from encoder
-  P1->SEL0 = ???;
-  P1->SEL1 = ???;
-  P1->DIR = ???;
-  P1->REN = ???;
-  P1->OUT = ???;
-  P1->IFG = ???;
-  P1->IES = ???;
-  P1->IE = ???;*/
+  //data from encoder (port 1.5)
+  P1->SEL0 &= ~(BIT5);      // set to General IO Mode
+  P1->SEL1 &= ~(BIT5);      // Make sure not to be in tertiary function
+  P1->DIR &= ~(BIT5);       // set direction to input
+  P1->REN |= BIT5;          // enable pullup
+  P1->OUT |= BIT5;          // clear interrupts
+  P1->IFG &= ~(BIT5);       // clear interrupts
+  P1->IES = BIT5;           // set IFT flag to high to low transition
+  P1->IE = BIT5;            // Enable port interrupt
 
   /* Left button configure */
   P1->SEL0 &= ~(BIT1);      // Set Port Pin Selection to General IO Mode
@@ -103,7 +116,7 @@ void GPIO_configure(void) {
 
 
   P1->IFG = 0;
-  P1->IE =  (BIT1 | BIT4);       // Enable port interrupt
+  //P1->IE =  (BIT1 | BIT4);       // Enable port interrupt
   /* Enable Interrupts in the NVIC */
   NVIC_EnableIRQ(PORT1_IRQn);
   //NVIC->ISER[1] |= BIT3;
