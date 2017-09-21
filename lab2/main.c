@@ -10,6 +10,12 @@
 #include "timer.h"
 #include "port.h"
 
+//#define PROB3A
+//#define PROB3B
+//#define PROB4
+//#define ESCOOT
+//
+
 volatile uint16_t sysclock;
 volatile uint32_t beamBreaks = 0;
 volatile float distanceTraveled = 0;
@@ -25,7 +31,7 @@ void main(void)
 
   __enable_irq();
 
-#ifdef PROB12 || PROB3B
+#ifdef ESCOOT || PROB3B
   // SysTick Config
   SysTick->LOAD = 0X00FFFFFF;   // Give SysTick a starting value to count down from
   SysTick->CTRL = BIT0 | BIT2;  // Enable SysTick
@@ -43,18 +49,18 @@ void main(void)
   P1->IFG |= BIT1;          // manually create flag
 #endif
 
-#ifdef PROB12
+#ifdef ESCOOT
   part_twelve = SysTick->VAL;
   //P1->IFG |= BIT5;
   part_twelve -= SysTick->VAL;
 #endif
 
   while (1){
-#ifdef PROB12
+#ifdef ESCOOT
       distanceTraveled = beamBreaks * 0.9107;
 #endif
       //P1->OUT ^= BIT0;
-#ifdef PROB12
+#ifdef ESCOOT
       P1->IFG |= BIT5;
 #endif
       //for(i = 0; i<200000; i++);
