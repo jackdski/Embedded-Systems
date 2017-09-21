@@ -76,7 +76,7 @@ void TA0_0_IRQHandler() {
         extraBit++;
 #endif 
 
-#if )
+#if 0
     TIMER_A0->CTL &= ~(BIT1);  //Turn off timer interrupts
 
     P1->OUT ^= (BIT7 | BIT0);
