@@ -7,16 +7,22 @@
  */
 #include "port.h"
 
+extern int beamBreaks;
+extern int part_twelve;
+extern int latency_twelve;
+extern int execution;
+
 /* Handles interrupts from P1 */
 void PORT1_IRQHandler(){
 #ifdef PROB3b
   sysclock -= SysTick->VAL;
 #endif
+
 #ifdef PROB12
     int latency_twelve = 0;
-    int execution = 0; 
+    int execution = 0;
 #endif
-    
+
     //When testing latency into the function, this will turn off the pin
     if(P1->IFG & (BIT1 | BIT4)){
         P1->IE &= ~(BIT1 | BIT4);
@@ -24,11 +30,13 @@ void PORT1_IRQHandler(){
     }
 
     // Prob. 11 P1.5 IFG
+#ifdef PROB12
     if (P1->IFG & BIT5) {
         latency_twelve = part_twelve - SysTick->VAL;
         beamBreaks++;
+        P1->OUT ^= BIT0;
     }
-
+#endif
 
 #if 0
     //These if statements toggle pin one, tick through the RGB LED and turn
@@ -62,12 +70,14 @@ void PORT1_IRQHandler(){
 #endif
 
 
-    P1->IFG &= CLEAR_FLAGS;
 
     //NVIC_EnableIRQ(PORT1_IRQn);
     //When testing out of the function, this will turn on the pin
     //P1->OUT |= BIT7;
+#ifdef PROB12
     execution = part_twelve - SysTick->VAL;
+    P1->IFG &= CLEAR_FLAGS;
+#endif
 }
 
 // Configure the GPIO pins
@@ -116,7 +126,7 @@ void GPIO_configure(void) {
 
 
   P1->IFG = 0;
-  //P1->IE =  (BIT1 | BIT4);       // Enable port interrupt
+  P1->IE =  (BIT1 | BIT4);       // Enable port interrupt
   /* Enable Interrupts in the NVIC */
   NVIC_EnableIRQ(PORT1_IRQn);
   //NVIC->ISER[1] |= BIT3;
