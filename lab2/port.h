@@ -10,11 +10,9 @@
 
 #include "msp.h"
 
-#define CLEAR_FLAGS (uint8_t) (~(BIT1 | BIT4))
+#define CLEAR_FLAGS (uint8_t) (~(BIT1 | BIT4 | BIT5))
 
-void ISR_FUNCTION_PORTS();
-
-
+//void ISR_FUNCTION_PORTS();
 
 void GPIO_configure(void);
 
