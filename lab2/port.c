@@ -14,7 +14,7 @@ extern int execution;
 
 /* Handles interrupts from P1 */
 void PORT1_IRQHandler(){
-#ifdef PROB3b
+#ifdef PROB3B
   sysclock -= SysTick->VAL;
 #endif
 
@@ -24,7 +24,7 @@ void PORT1_IRQHandler(){
         NVIC_EnableIRQ(TA0_0_IRQn);
     }
   
-#ifdef PROB12
+#ifdef ESCOOT
   int latency_twelve = 0;
   int execution = 0;
   if (P1->IFG & BIT5) {
@@ -35,8 +35,6 @@ void PORT1_IRQHandler(){
 #endif
 
     // Prob. 11 P1.5 IFG
-#ifdef PROB12
-#endif
 
 #ifdef PROB4
     //These if statements toggle pin one, tick through the RGB LED and turn
@@ -74,7 +72,7 @@ void PORT1_IRQHandler(){
     //NVIC_EnableIRQ(PORT1_IRQn);
     //When testing out of the function, this will turn on the pin
     //P1->OUT |= BIT7;
-#ifdef PROB12
+#ifdef ESCOOT
     execution = part_twelve - SysTick->VAL;
     P1->IFG &= CLEAR_FLAGS;
 #endif
