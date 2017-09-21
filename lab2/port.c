@@ -18,27 +18,27 @@ void PORT1_IRQHandler(){
   sysclock -= SysTick->VAL;
 #endif
 
-#ifdef PROB12
-    int latency_twelve = 0;
-    int execution = 0;
-#endif
-
     //When testing latency into the function, this will turn off the pin
     if(P1->IFG & (BIT1 | BIT4)){
         P1->IE &= ~(BIT1 | BIT4);
         NVIC_EnableIRQ(TA0_0_IRQn);
     }
+  
+#ifdef PROB12
+  int latency_twelve = 0;
+  int execution = 0;
+  if (P1->IFG & BIT5) {
+      latency_twelve = part_twelve - SysTick->VAL;
+      beamBreaks++;
+      P1->OUT ^= BIT0;
+  }
+#endif
 
     // Prob. 11 P1.5 IFG
 #ifdef PROB12
-    if (P1->IFG & BIT5) {
-        latency_twelve = part_twelve - SysTick->VAL;
-        beamBreaks++;
-        P1->OUT ^= BIT0;
-    }
 #endif
 
-#if 0
+#ifdef PROB4
     //These if statements toggle pin one, tick through the RGB LED and turn
     //off bit seven. There are used for all pre-timer parts of the lab.
     if((P1->IFG & BIT1) || (P1->IFG & BIT4)){
