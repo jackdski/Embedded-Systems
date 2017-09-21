@@ -16,15 +16,15 @@
 //#define PROB10
 //#define ESCOOT
 
-volatile uint16_t sysclock;
-volatile uint32_t beamBreaks = 0;
-volatile float distanceTraveled = 0;
+volatile uint16_t sysclock;           // Variable we use to get a value to calculate latency 
+volatile uint32_t beamBreaks = 0;     // Counts how many beam breaks there have been
+volatile float distanceTraveled = 0;  // Where the calculated distance traveled by the scooter is stored
 int part_twelve = 0;
 
 void main(void)
 {
   volatile unsigned int i;
-  WDT_A->CTL = (WDT_A_CTL_PW | WDT_A_CTL_HOLD);
+  WDT_A->CTL = (WDT_A_CTL_PW | WDT_A_CTL_HOLD);   // turn off watchdog
 
   GPIO_configure();
   timer_a0_config();
