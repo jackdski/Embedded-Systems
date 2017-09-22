@@ -1,11 +1,16 @@
 /*
  * timer.c
- *
+ *This code configures and handles all timer operations within the code.
+ *By default it will only be turned on by button presses and will toggle through all of
+ *the P2 LEDs in different sequences depending on which button was pressed.
  *  Created on: Sep 7, 2017
- *      Author: amabo and Jack
+ *      Author: Avery and Jack
  */
 #include "timer.h"
 
+//These bits are used to store information for the timers operation between calls.
+//Activation bit stores the P1 flag that started the interrupt, and extraBit is used
+//to run through the function multiple times until we reach 500ms on each light.
 volatile uint8_t activationBit = 0;
 volatile uint8_t extraBit = 0;
 
@@ -24,7 +29,7 @@ void TA0_0_IRQHandler() {
     }
 
     /*As the timer cannot count up to 500ms, we need to count to a multiple of 500
-     * many times. This interrupt goes off every 166ms, so we need three counts before
+     * many times. This interrupt goes off every 125ms, so we need three counts before
      * taking action. Extrabit keeps count of how many times our interrupt has gone off
      * since we last took action
      */
@@ -34,7 +39,10 @@ void TA0_0_IRQHandler() {
         P1->OUT ^= (BIT7 | BIT0);  //toggle bits
 
         /*
-         *
+         *These if statements will fire if the LED is one value away from
+         *overflowing into other port pins, they handle counting up and down
+         *respectively.  Inside the functions they turn off the RGB LED, disable
+         *timer interrupts, reset the activation bit, and reinitialize the port interrupts
          */
         int8_t RGBMask = P2->OUT & (BIT0 | BIT1 | BIT2);
         if((activationBit & BIT1) && (RGBMask == 7)){
@@ -54,7 +62,9 @@ void TA0_0_IRQHandler() {
             return;
         }
 
-
+        /*
+        *If we are not yet at the end, iterate the direction we want to.
+        */
         if(activationBit & BIT1){
             P2->OUT += 1;
         }
@@ -63,12 +73,8 @@ void TA0_0_IRQHandler() {
         }
 
     }
-
-    TIMER_A0->R = 0;
-    //TIMER_A0->CTL &= ~0;//(BIT0);
-    TIMER_A0->CCTL[0] &= ~(BIT0);
-    TIMER_A0->CTL |=  (BIT1);
-
+    
+    //If I am exiting the function, reset extrabit to zero. Otherwise iterate it
     if(extraBit == 3){
         extraBit = 0;
     }
@@ -76,17 +82,8 @@ void TA0_0_IRQHandler() {
         extraBit++;
 #endif 
 
-#if 0
-    TIMER_A0->CTL &= ~(BIT1);  //Turn off timer interrupts
-
-    P1->OUT ^= (BIT7 | BIT0);
-
-#endif
-
-    TIMER_A0->R = 0;
-        //TIMER_A0->CTL &= ~0;//(BIT0);
+    //Clear the timer flag
     TIMER_A0->CCTL[0] &= ~(BIT0);
-    TIMER_A0->CTL |=  (BIT1);
 }
 
 void timer_a0_config(){
@@ -102,8 +99,7 @@ void timer_a0_config(){
     //capture/compare timer interrupt enabled at the peripheral
     //global interrupts enabled (BIT4 = 1 (enabled)
     //set to compare mode   (CCTL-BIT8; 0=Comp.,1=Capt.)
+    
+    //Note we do not call the enable NVIC function as that operation is tied to the ports
 
-    /* Enable Interrupts in the NVIC */
-    //NVIC_EnableIRQ(TA0_0_IRQn);
-    //NVIC->ISER[1] |= BIT3;
 }
