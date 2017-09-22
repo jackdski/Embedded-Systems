@@ -19,15 +19,15 @@
 volatile uint16_t sysclock;           // Variable we use to get a value to calculate latency 
 volatile uint32_t beamBreaks = 0;     // Counts how many beam breaks there have been
 volatile float distanceTraveled = 0;  // Where the calculated distance traveled by the scooter is stored
-int part_twelve = 0;
+int part_twelve = 0;                  // Global variable used to store the difference in SysTick values
 
 void main(void)
 {
   volatile unsigned int i;
   WDT_A->CTL = (WDT_A_CTL_PW | WDT_A_CTL_HOLD);   // turn off watchdog
 
-  GPIO_configure();
-  timer_a0_config();
+  GPIO_configure();   // Call function that configures all the buttons, pins, etc.
+  timer_a0_config();  // Call function that configures Timer A0
 
   __enable_irq();
 
@@ -39,8 +39,8 @@ void main(void)
 
 #ifdef PROB3A
   //This is the pin set required to test the lattency of the interrupts
-  //P1->OUT |= BIT7;
-  //P1->IFG |= BIT1;
+  P1->OUT |= BIT7;
+  P1->IFG |= BIT1;
 #endif
 
 #ifdef PROB3B
@@ -49,23 +49,29 @@ void main(void)
   P1->IFG |= BIT1;          // manually create flag
 #endif
 
+/*
+ *  Probelem 12.
+ *  Used SysTick to get the latency, execution time, and return time of 
+ *  the square wave input 
+ */
 #ifdef ESCOOT
   part_twelve = SysTick->VAL;
-  //P1->IFG |= BIT5;
+  //P1->IFG |= BIT5;            //Set high to trigger interrupt
   part_twelve -= SysTick->VAL;
 #endif
 
   while (1){
 #ifdef ESCOOT
+      // Constantly update the distance travelled by checking if there is a new value for beamBreaks
       distanceTraveled = beamBreaks * 0.9107;
 #endif
-      //P1->OUT ^= BIT0;
+    //P1->OUT ^= BIT0;
 #ifdef ESCOOT
-      P1->IFG |= BIT5;
+    // Manually trigger the P1.5 interrupt
+    P1->IFG |= BIT5;
 #endif
-      //for(i = 0; i<200000; i++);
-
+    // For loop delay for the blinking LED, etc. 
+    //for(i = 0; i<200000; i++);
   }
-
 }
 
