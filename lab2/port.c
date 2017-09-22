@@ -15,30 +15,32 @@ extern int execution;
 /* Handles interrupts from P1 */
 void PORT1_IRQHandler(){
 #ifdef PROB3B
-  sysclock -= SysTick->VAL;
+  sysclock -= SysTick->VAL;   // Find the difference to get the amount of ticks passed using SysTick
 #endif
 
-    //When testing latency into the function, this will turn off the pin
-    if(P1->IFG & (BIT1 | BIT4)){
-        P1->IE &= ~(BIT1 | BIT4);
-        NVIC_EnableIRQ(TA0_0_IRQn);
-    }
+  //When testing latency into the function, this will turn off the pin
+  if(P1->IFG & (BIT1 | BIT4)){
+    P1->IE &= ~(BIT1 | BIT4);
+    NVIC_EnableIRQ(TA0_0_IRQn);
+  }
   
+  // Part 12: Find the latency time and execution time using SysTick
 #ifdef ESCOOT
   int latency_twelve = 0;
   int execution = 0;
+  // Handle's P1.5's interrupt
   if (P1->IFG & BIT5) {
-      latency_twelve = part_twelve - SysTick->VAL;
-      beamBreaks++;
-      P1->OUT ^= BIT0;
+    latency_twelve = part_twelve - SysTick->VAL;  // Find latency time
+    beamBreaks++;     // Increment number of beam breaks there have been
+    /* Turn on the LED to see if the beam break was broken 
+       without using an o'scope or other device */
+    P1->OUT ^= BIT0;
   }
 #endif
 
-    // Prob. 11 P1.5 IFG
-
 #ifdef PROB4
     //These if statements toggle pin one, tick through the RGB LED and turn
-    //off bit seven. There are used for all pre-timer parts of the lab.
+    //off bit seven. They are used for all pre-timer parts of the lab.
     if((P1->IFG & BIT1) || (P1->IFG & BIT4)){
         P1->OUT ^= BIT0;
         P1->OUT &= ~(BIT7);
@@ -72,10 +74,13 @@ void PORT1_IRQHandler(){
     //NVIC_EnableIRQ(PORT1_IRQn);
     //When testing out of the function, this will turn on the pin
     //P1->OUT |= BIT7;
+  
+  // Find the execution time of the P1.5 interrupt
 #ifdef ESCOOT
     execution = part_twelve - SysTick->VAL;
-    P1->IFG &= CLEAR_FLAGS;
 #endif
+  // Clear all interrupt flags before exiting function
+  P1->IFG &= CLEAR_FLAGS;
 }
 
 // Configure the GPIO pins
