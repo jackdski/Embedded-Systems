@@ -11,31 +11,43 @@
 #include "circbuf.h"
 #include <stdlib.h>
 
-typedef struct CircBuf_t {
-    uint8_t * buffer;               // Pointer to the base of the buffer in heap
-    volatile uint8_t * head;        // Pointer to first item
-    volatile uint8_t * tail;        // Pointer to last item
-    volatile uint32_t num_items;    // Number of items in buffer
-    volatile uint32_t length;       // Max number of items the buffer can hold
-} CircBuf_t;
-
-
 CircBuf_t * createCircBuf(uint32_t length) {
-    CircBuf_t * ourBuf = malloc(sizeof(CircBuf_t));
-    ourBuff->buffer = malloc(sizeof(uint8_t));
-    ourBuff->head = 0;
-    ourBuff->tail = 0;
-    ourBuf->length = length;
+    if(length>0){
+        CircBuf_t * ourBuf = malloc(sizeof(CircBuf_t));
+        ourBuf->buffer = malloc(sizeof(uint8_t)*length);
 
+        ourBuf->length = length;
+        resetCircBuf(ourBuf);
+        return ourBuf;
+    }
+    return NULL;
 }
 
-CircBuf_t clearCircBuf(CircBuf_t * buf) {
-    free(buf);
+void deleteCircBuf(CircBuf_t * buf) {
+    if(buf){
+        free(buf->buffer);
+        free(buf);
+    }
+}
+
+void resetCircBuf(CircBuf_t * buf){
+    if(!buf){
+        return;
+    }
+    uint32_t i = 0;
+    for(i=0; i < buf->length; i++){
+        buf->buffer[i] = 0;
+    }
+    buf->head = 0;
+    buf->tail = 0;
 }
 
 // Return 1 = Buffer is full, Return 0 = Buffer is not full
 int8_t isFullCircBuff(CircBuf_t * buf) {
-    if (buf->num_items == buf->length) {
+    if(!buf){
+        return 0;
+    }
+    else if (buf->num_items == buf->length) {
         return 1;
     }
     else {
@@ -44,20 +56,29 @@ int8_t isFullCircBuff(CircBuf_t * buf) {
 }
 
 void addItemCircBuf(CircBuf_t * buf, uint8_t item) {
-    int next = buf->head + 1;
-    if (next >= buf->length) {
-        next = 0;
+    if(!buf){
+        return;
+    }
+    else if(isFullCircBuff(buf)){
+        return;
     }
 
-    buf->buffer[buf->head] = item;
-    buf->head = next;
+    buf->buffer[buf->tail] = item;
+    buf->tail = (buf->tail + 1)%((uint8_t)buf->length);
+    buf->num_items ++;
 }
 
 uint8_t removeItem(CircBuf_t * buf) {
-    int next = buf->tail+1;
-    if (next > buf->length) {
-        next = 0;
+    if(!buf){
+        return 0xFF;
     }
-    uint8_t data = buf->buffer[buf->tail];
-    buf->tail = next;
+    if(buf->num_items == 0){
+        return 0xFF;
+    }
+    uint8_t data = buf->buffer[buf->head];
+    buf->head = (buf->head+1)%((uint8_t)buf->length);
+    buf->num_items --;
+
+    return data;
 }
+
