@@ -11,7 +11,7 @@
 
 void configure_serial_port();
 void configure_clocks();
-void UART_send_n(uint8_t * data, uint32_t length);
+void UART_send_n(uint8_t * data, uint8_t length);
 void UART_send_byte(uint8_t data);
 
 #endif
