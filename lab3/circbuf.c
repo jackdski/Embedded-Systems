@@ -38,8 +38,9 @@ void resetCircBuf(CircBuf_t * buf){
     for(i=0; i < buf->length; i++){
         buf->buffer[i] = 0;
     }
-    buf->head = 0;
-    buf->tail = 0;
+    buf->head = buf->buffer;
+    buf->tail = buf->buffer;
+    buf->num_items = 0;
 }
 
 // Return 1 = Buffer is full, Return 0 = Buffer is not full
@@ -63,9 +64,19 @@ void addItemCircBuf(CircBuf_t * buf, uint8_t item) {
         return;
     }
 
-    buf->buffer[buf->tail] = item;
-    buf->tail = (buf->tail + 1)%((uint8_t)buf->length);
+    *buf->tail = item;
+    buf->tail = (buf->tail - (volatile uint8_t *)buf->buffer + 1)%((uint8_t)buf->length) + (volatile uint8_t *)buf->buffer;
     buf->num_items ++;
+}
+
+uint8_t isEmpty(CircBuf_t * buf){
+    if(!buf){
+        return 1;
+    }
+    if(buf->num_items == 0){
+        return 1;
+    }
+    return 0;
 }
 
 uint8_t removeItem(CircBuf_t * buf) {
@@ -75,8 +86,8 @@ uint8_t removeItem(CircBuf_t * buf) {
     if(buf->num_items == 0){
         return 0xFF;
     }
-    uint8_t data = buf->buffer[buf->head];
-    buf->head = (buf->head+1)%((uint8_t)buf->length);
+    uint8_t data = *buf->head;
+    buf->head = (buf->head - (volatile uint8_t *)buf->buffer + 1)%((uint8_t)buf->length) + (volatile uint8_t *)buf->buffer;
     buf->num_items --;
 
     return data;
