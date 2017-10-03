@@ -1,4 +1,3 @@
-
 /*
  * uart.c
  *
@@ -6,6 +5,11 @@
  *      Author: amabo
  */
 #include "uart.h"
+#include "circbuf.h"
+
+extern CircBuf_t * TXBuf;
+extern CircBuf_t * RXBuf;
+
 
 void configure_serial_port(){
     //Configure UART pins, set 2-UART pins to UART mode
@@ -18,8 +22,9 @@ void configure_serial_port(){
     EUSCI_A0->MCTLW |= (BIT0 | BIT5);           //Set modulator bits
     EUSCI_A0->CTLW0 &= ~(EUSCI_A_CTLW0_SWRST);  //Initialize eUSCI
 
-    //EUSCI_A0->UCA0IE |= (BIT0 | BIT1)  //Turn on interrupts for RX and TX
-    //NVIC_EnableIRQ(EUSCIA0_IRQn);
+    EUSCI_A0->IFG &= ~(BIT1 | BIT0);
+    UCA0IE |= (BIT0 | BIT1);  //Turn on interrupts for RX and TX
+    NVIC_EnableIRQ(EUSCIA0_IRQn);
 }
 
 void configure_clocks(){
@@ -33,26 +38,37 @@ void configure_clocks(){
 
 }
 
-void UART_send_n(uint8_t * data, uint32_t length){
+void UART_send_n(uint8_t * data, uint8_t length){
     //Code to iterate through the transmit data
     if(!data)
         return;
-    volatile uint32_t n;
+    volatile uint8_t n;
 
     for(n = 0; n<length; n++){
         UART_send_byte(data[n]);
     }
 }
 void UART_send_byte(uint8_t data){
-    //while(~(EUSCI_A0->IFG & BIT1));  //While it hasn't finished transmitting
+#ifdef  BLOCKING
+    while(!(EUSCI_A0->IFG & BIT1));  //While it hasn't finished transmitting
+#endif
     EUSCI_A0->TXBUF = data;
 }
 
-extern void EUSCIA0_IRQHandler(){
+void EUSCIA0_IRQHandler(){
     if (EUSCI_A0->IFG & BIT0){
-        //Recieve Stuff
+        addItemCircBuf(TXBuf, EUSCI_A0->RXBUF);
+        if(TXBuf->num_items == 1){
+            EUSCI_A0->IFG |= BIT1;
+        }
     }
     if (EUSCI_A0->IFG & BIT1){
         //Transmit Stuff
+        if(isEmpty(TXBuf)){
+           EUSCI_A0->IFG &= ~BIT1;
+           return;
+        }
+        UART_send_byte(removeItem(TXBuf));
     }
 }
+
