@@ -9,7 +9,7 @@
 
 extern CircBuf_t * TXBuf;
 extern CircBuf_t * RXBuf;
-
+extern uint8_t work;
 
 void configure_serial_port(){
     //Configure UART pins, set 2-UART pins to UART mode
@@ -22,9 +22,11 @@ void configure_serial_port(){
     EUSCI_A0->MCTLW |= (BIT0 | BIT5);           //Set modulator bits
     EUSCI_A0->CTLW0 &= ~(EUSCI_A_CTLW0_SWRST);  //Initialize eUSCI
 
+#ifndef BLOCKING
     EUSCI_A0->IFG &= ~(BIT1 | BIT0);
     UCA0IE |= (BIT0 | BIT1);  //Turn on interrupts for RX and TX
     NVIC_EnableIRQ(EUSCIA0_IRQn);
+#endif
 }
 
 void configure_clocks(){
@@ -38,6 +40,7 @@ void configure_clocks(){
 
 }
 
+#ifdef  BLOCKING
 void UART_send_n(uint8_t * data, uint8_t length){
     //Code to iterate through the transmit data
     if(!data)
@@ -48,6 +51,8 @@ void UART_send_n(uint8_t * data, uint8_t length){
         UART_send_byte(data[n]);
     }
 }
+#endif
+
 void UART_send_byte(uint8_t data){
 #ifdef  BLOCKING
     while(!(EUSCI_A0->IFG & BIT1));  //While it hasn't finished transmitting
@@ -56,6 +61,8 @@ void UART_send_byte(uint8_t data){
 }
 
 void EUSCIA0_IRQHandler(){
+
+#ifdef ECHO
     if (EUSCI_A0->IFG & BIT0){
         addItemCircBuf(TXBuf, EUSCI_A0->RXBUF);
         if(TXBuf->num_items == 1){
@@ -70,5 +77,41 @@ void EUSCIA0_IRQHandler(){
         }
         UART_send_byte(removeItem(TXBuf));
     }
+#endif
+
+    if (EUSCI_A0->IFG & BIT0){
+        uint8_t data = EUSCI_A0->RXBUF;
+        if(data == '\n' | (RXBuf->num_items == RXBuf->length)){
+            work = 1;
+            //EUSCI_A0->CTLW0 |= EUSCI_A_CTLW0_SWRST;     //Put eUSCI in reset to pause RX
+        }
+        else
+            addItemCircBuf(RXBuf, data);
+
+    }
+    if (EUSCI_A0->IFG & BIT1){
+        //Transmit Stuff
+        if(isEmpty(TXBuf)){
+            EUSCI_A0->IFG &= ~BIT1;
+              return;
+        }
+        UART_send_byte(removeItem(TXBuf));
+    }
+
 }
 
+void transmitRX(){
+    if(isEmpty(RXBuf)){
+        return;
+    }
+    volatile uint32_t length = RXBuf->num_items;
+    volatile uint32_t i;
+    uint8_t temp;
+
+    for(i = 0; i < length; i++){
+        temp = removeItem(RXBuf);
+        addItemCircBuf(RXBuf, temp);
+        addItemCircBuf(TXBuf, temp);
+    }
+    UART_send_byte(removeItem(TXBuf));
+}
