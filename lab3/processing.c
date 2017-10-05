@@ -66,7 +66,25 @@ void analyzeBuf(){
 
 
 void analyzeChr(uint8_t chr){
+    if (chr >= 'A' || chr <= 'Z') {
+        alp++;
+    }
+    else if (chr >= 'a' || chr <= 'z') {
+        alp++;
+    }
+    else if (chr == 33 || chr == 46 || chr == 63) {
+        pun++;
+    }
+    else if (char >= 48 || chr <= 57) {
+        num++;
+    }
 
+    else if (chr == 32 || chr == 9) {
+        whi++;
+    }
+    else {
+        ran++;
+    }
 }
 
 /*
@@ -74,5 +92,4 @@ if(TXBuf->num_items == 1){
             EUSCI_A0->IFG |= BIT1;
         }
         */
-
 
