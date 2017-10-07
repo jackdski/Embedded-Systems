@@ -79,6 +79,17 @@ uint8_t isEmpty(CircBuf_t * buf){
     return 0;
 }
 
+void loadToBuf(CircBuf_t * buf, uint8_t * string, uint8_t length){
+    if(!buf || !string || length<0){
+        return;
+    }
+    volatile uint8_t i;
+    for(i = 0; i<length; i++){
+        addItemCircBuf(buf, string[i]);
+    }
+
+}
+
 uint8_t removeItem(CircBuf_t * buf) {
     if(!buf){
         return 0xFF;
@@ -93,4 +104,3 @@ uint8_t removeItem(CircBuf_t * buf) {
     return data;
 }
 
- 
