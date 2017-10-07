@@ -12,11 +12,11 @@ extern uint8_t transmit;
 extern CircBuf_t * TXBuf;
 extern CircBuf_t * RXBuf;
 
-extern uint8_t alp; //Number of alphabetical chars
-extern uint8_t pun; //Number of punctuation chars
-extern uint8_t num; //Number of numerical chars
-extern uint8_t whi; //Number of white chars
-extern uint8_t ran; //Number of random chars
+extern uint32_t alp; //Number of alphabetical chars
+extern uint32_t pun; //Number of punctuation chars
+extern uint32_t num; //Number of numerical chars
+extern uint32_t whi; //Number of white chars
+extern uint32_t ran; //Number of random chars
 
 
 
@@ -86,25 +86,21 @@ void analyzeBuf(){
     ran = 0;
 
     loadToBuf(TXBuf,str1, 6);
-    addItemCircBuf(TXBuf, 0x0A);
     addItemCircBuf(TXBuf, 0x0D);
 
     loadToBuf(TXBuf,alps, 3);
 
     loadToBuf(TXBuf,str2, 8);
-    addItemCircBuf(TXBuf, 0x0A);
     addItemCircBuf(TXBuf, 0x0D);
 
     loadToBuf(TXBuf,puns, 3);
 
     loadToBuf(TXBuf,str3, 18);
-    addItemCircBuf(TXBuf, 0x0A);
     addItemCircBuf(TXBuf, 0x0D);
 
     loadToBuf(TXBuf,nums, 3);
 
     loadToBuf(TXBuf,str4, 8);
-    addItemCircBuf(TXBuf, 0x0A);
     addItemCircBuf(TXBuf, 0x0D);
 
     loadToBuf(TXBuf,whis, 3);
@@ -120,14 +116,18 @@ void analyzeBuf(){
     addItemCircBuf(TXBuf, 0x0A);
     addItemCircBuf(TXBuf, 0x0D);
 
+    addItemCircBuf(TXBuf, 0x0A);
+
     UART_send_byte(removeItem(TXBuf));
 
-
     //COPY RX STILL
+
+    //UART_send_byte(removeItem(TXBuf));
+    while(!isEmpty(TXBuf));
     for(i = 0; i < length; i++){
         addItemCircBuf(TXBuf, removeItem(RXBuf));
     }
-    //UART_send_byte(removeItem(TXBuf));
+    UART_send_byte(removeItem(TXBuf));
 
 }
 
@@ -155,18 +155,16 @@ void analyzeChr(uint8_t chr){
     }
 }
 
-void itoa(uint8_t num, uint8_t * str){
-    str[2] = (uint8_t)num%10;
+void itoa(uint32_t num, uint8_t * str){
+    str[2] = (uint32_t)num%10;
     num = num/10;
-    str[1] = (uint8_t)num%10;
+    str[1] = (uint32_t)num%10;
     num = num/10;
-    str[0] = (uint8_t)num%10;
+    str[0] = (uint32_t)num%10;
     num = num/10;
 
     str[0] += 48;
     str[1] += 48;
     str[2] += 48;
 }
-
-
 
