@@ -11,6 +11,25 @@
 #include "circbuf.h"
 #include "processing.h"
 
+void itoa(uint8_t num, int size, char * str ) {
+	int i;
+
+	i = size;
+	while (i >= 0) {
+		if ( i == size) {
+			str[i] = '\0';
+			i--;
+		}
+		else {
+			str[i] = num % 10;
+			str[i] += 48;
+			printf("Char %i: %c\n", i, str[i]);
+			num = num / 10;
+			i--;
+		}
+	}
+}
+
 // Converts a string of numbers into an integer
 int atoi(char * a) {
 	int returnArray [3]; 
