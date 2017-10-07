@@ -23,8 +23,8 @@ void        resetCircBuf(CircBuf_t * buf);
 int8_t      isFullCircBuf(CircBuf_t * buf);
 void        addItemCircBuf(CircBuf_t * buf, uint8_t item);
 uint8_t     isEmpty(CircBuf_t * buf);
+void        loadToBuf(CircBuf_t * buf, uint8_t * string, uint8_t length);
 uint8_t     removeItem(CircBuf_t * buf);
 
 
 #endif
- 
