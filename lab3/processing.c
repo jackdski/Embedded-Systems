@@ -19,6 +19,7 @@ extern uint8_t whi; //Number of white chars
 extern uint8_t ran; //Number of random chars
 
 
+
 void configurePorts(){
     P1->SEL0 &= ~(BIT1 | BIT4);
     P1->SEL1 &= ~(BIT1 | BIT4);
@@ -59,23 +60,90 @@ void analyzeBuf(){
         analyzeChr(temp);
     }
 
+    uint8_t * str1 = "We saw";
+    uint8_t * str2 = " letters";
+    uint8_t * str3 = " punctuation marks";
+    uint8_t * str4 = " numbers";
+    uint8_t * str5 = " white-space characters";
+    uint8_t * str6 = " other characters";
 
+    uint8_t alps[3];
+    uint8_t nums[3];
+    uint8_t puns[3];
+    uint8_t whis[3];
+    uint8_t rans[3];
+
+    itoa(alp,alps);
+    itoa(num,nums);
+    itoa(pun,puns);
+    itoa(whi,whis);
+    itoa(ran,rans);
+
+    alp = 0;
+    num = 0;
+    pun = 0;
+    whi = 0;
+    ran = 0;
+
+    loadToBuf(TXBuf,str1, 6);
+    addItemCircBuf(TXBuf, 0x0A);
+    addItemCircBuf(TXBuf, 0x0D);
+
+    loadToBuf(TXBuf,alps, 3);
+
+    loadToBuf(TXBuf,str2, 8);
+    addItemCircBuf(TXBuf, 0x0A);
+    addItemCircBuf(TXBuf, 0x0D);
+
+    loadToBuf(TXBuf,puns, 3);
+
+    loadToBuf(TXBuf,str3, 18);
+    addItemCircBuf(TXBuf, 0x0A);
+    addItemCircBuf(TXBuf, 0x0D);
+
+    loadToBuf(TXBuf,nums, 3);
+
+    loadToBuf(TXBuf,str4, 8);
+    addItemCircBuf(TXBuf, 0x0A);
+    addItemCircBuf(TXBuf, 0x0D);
+
+    loadToBuf(TXBuf,whis, 3);
+
+
+    loadToBuf(TXBuf,str5, 23);
+    addItemCircBuf(TXBuf, 0x0A);
+    addItemCircBuf(TXBuf, 0x0D);
+
+    loadToBuf(TXBuf,rans, 3);
+
+    loadToBuf(TXBuf,str6, 17);
+    addItemCircBuf(TXBuf, 0x0A);
+    addItemCircBuf(TXBuf, 0x0D);
 
     UART_send_byte(removeItem(TXBuf));
+
+
+    //COPY RX STILL
+    for(i = 0; i < length; i++){
+        addItemCircBuf(TXBuf, removeItem(RXBuf));
+    }
+    //UART_send_byte(removeItem(TXBuf));
+
 }
 
 
 void analyzeChr(uint8_t chr){
-    if (chr >= 'A' || chr <= 'Z') {
+    if (chr >= 'A' && chr <= 'Z') {
         alp++;
     }
-    else if (chr >= 'a' || chr <= 'z') {
+    else if (chr >= 'a' && chr <= 'z') {
         alp++;
     }
-    else if (chr == 33 || chr == 46 || chr == 63) {
+    else if (chr == 33 || chr == 46 || chr == 63 || chr == 44
+                       || chr == 39 || chr == 45) {
         pun++;
     }
-    else if (char >= 48 || chr <= 57) {
+    else if (chr >= 48 && chr <= 57) {
         num++;
     }
 
@@ -87,9 +155,18 @@ void analyzeChr(uint8_t chr){
     }
 }
 
-/*
-if(TXBuf->num_items == 1){
-            EUSCI_A0->IFG |= BIT1;
-        }
-        */
+void itoa(uint8_t num, uint8_t * str){
+    str[2] = (uint8_t)num%10;
+    num = num/10;
+    str[1] = (uint8_t)num%10;
+    num = num/10;
+    str[0] = (uint8_t)num%10;
+    num = num/10;
+
+    str[0] += 48;
+    str[1] += 48;
+    str[2] += 48;
+}
+
+
 
