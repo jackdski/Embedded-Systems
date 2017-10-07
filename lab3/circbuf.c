@@ -14,7 +14,14 @@
 CircBuf_t * createCircBuf(uint32_t length) {
     if(length>0){
         CircBuf_t * ourBuf = malloc(sizeof(CircBuf_t));
+
+        if(!ourBuf)
+            return NULL;
+
         ourBuf->buffer = malloc(sizeof(uint8_t)*length);
+
+        if(!ourBuf->buffer)
+            return NULL;
 
         ourBuf->length = length;
         resetCircBuf(ourBuf);
@@ -44,7 +51,7 @@ void resetCircBuf(CircBuf_t * buf){
 }
 
 // Return 1 = Buffer is full, Return 0 = Buffer is not full
-int8_t isFullCircBuff(CircBuf_t * buf) {
+int8_t isFullCircBuf(CircBuf_t * buf) {
     if(!buf){
         return 0;
     }
@@ -60,12 +67,12 @@ void addItemCircBuf(CircBuf_t * buf, uint8_t item) {
     if(!buf){
         return;
     }
-    else if(isFullCircBuff(buf)){
+    else if(isFullCircBuf(buf)){
         return;
     }
 
     *buf->tail = item;
-    buf->tail = (buf->tail - (volatile uint8_t *)buf->buffer + 1)%((uint8_t)buf->length) + (volatile uint8_t *)buf->buffer;
+    buf->tail = (buf->tail - (volatile uint8_t *)buf->buffer + 1)%(buf->length) + (volatile uint8_t *)buf->buffer;
     buf->num_items ++;
 }
 
@@ -80,11 +87,12 @@ uint8_t isEmpty(CircBuf_t * buf){
 }
 
 void loadToBuf(CircBuf_t * buf, uint8_t * string, uint8_t length){
-    if(!buf || !string || length<0){
+    if(!buf || !string ){
         return;
     }
     volatile uint8_t i;
     for(i = 0; i<length; i++){
+        while(isFullCircBuf(buf)==1);
         addItemCircBuf(buf, string[i]);
     }
 
@@ -98,7 +106,7 @@ uint8_t removeItem(CircBuf_t * buf) {
         return 0xFF;
     }
     uint8_t data = *buf->head;
-    buf->head = (buf->head - (volatile uint8_t *)buf->buffer + 1)%((uint8_t)buf->length) + (volatile uint8_t *)buf->buffer;
+    buf->head = (buf->head - (volatile uint8_t *)buf->buffer + 1)%(buf->length) + (volatile uint8_t *)buf->buffer;
     buf->num_items --;
 
     return data;
