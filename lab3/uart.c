@@ -84,7 +84,6 @@ void EUSCIA0_IRQHandler(){
         uint8_t data = EUSCI_A0->RXBUF;
         if(data == '\n' || (RXBuf->length == RXBuf->num_items)){
             work = 1;
-            //EUSCI_A0->CTLW0 |= EUSCI_A_CTLW0_SWRST;     //Put eUSCI in reset to pause RX
         }
         else
             addItemCircBuf(RXBuf, data);
@@ -102,6 +101,7 @@ void EUSCIA0_IRQHandler(){
 }
 
 void transmitRX(){
+
     if(isEmpty(RXBuf)){
         return;
     }
