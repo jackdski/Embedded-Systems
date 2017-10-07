@@ -8,7 +8,6 @@ CircBuf_t * RXBuf;
 
 uint8_t work = 0; //Flag bit. Is one if I want to process info
 uint8_t transmit = 0; //Flag bit. is one if I want to send the RXBuf
-
 uint8_t alp = 0; //Number of alphabetical chars
 uint8_t pun = 0; //Number of punctuation chars
 uint8_t num = 0; //Number of numerical chars
@@ -23,8 +22,8 @@ void main(void)
 {
 	WDT_A->CTL = WDT_A_CTL_PW | WDT_A_CTL_HOLD;		// stop watchdog timer
 
-	TXBuf = createCircBuf(10);
-	RXBuf = createCircBuf(10);
+	TXBuf = createCircBuf(256);
+	RXBuf = createCircBuf(256);
 
 	volatile uint8_t i;
 
