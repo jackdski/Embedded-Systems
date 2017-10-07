@@ -15,3 +15,4 @@
 int atoi(char * a);
 
 void itoa(uint8_t num, int size, char * str );
+void ftoa(float number, int decimalPlace, int size, char * str);
