@@ -14,5 +14,6 @@
 void configurePorts();
 void analyzeBuf();
 void analyzeChr(uint8_t chr);
+void itoa(uint8_t num, uint8_t * str);
 
 #endif /* PROCESSING_H_ */
