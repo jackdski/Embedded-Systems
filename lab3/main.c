@@ -8,11 +8,11 @@ CircBuf_t * RXBuf;
 
 uint8_t work = 0; //Flag bit. Is one if I want to process info
 uint8_t transmit = 0; //Flag bit. is one if I want to send the RXBuf
-uint8_t alp = 0; //Number of alphabetical chars
-uint8_t pun = 0; //Number of punctuation chars
-uint8_t num = 0; //Number of numerical chars
-uint8_t whi = 0; //Number of white chars
-uint8_t ran = 0; //Number of random chars
+uint32_t alp = 0; //Number of alphabetical chars
+uint32_t pun = 0; //Number of punctuation chars
+uint32_t num = 0; //Number of numerical chars
+uint32_t whi = 0; //Number of white chars
+uint32_t ran = 0; //Number of random chars
 
 
 /**
@@ -24,6 +24,10 @@ void main(void)
 
 	TXBuf = createCircBuf(256);
 	RXBuf = createCircBuf(256);
+
+	if(!TXBuf || !RXBuf){
+	    return;
+	}
 
 	volatile uint8_t i;
 
@@ -61,13 +65,12 @@ while(1){
 	  UART_send_n(ptr, 1);
 #endif
 	  if(work){
-	      analyzeBuf();
-	      //EUSCI_A0->CTLW0 &= ~EUSCI_A_CTLW0_SWRST;
 	      work = 0;
+	      analyzeBuf();
 	  }
-	  if(transmit){
-	      transmitRX();
+	  if(transmit==1){
 	      transmit = 0;
+	      transmitRX();
 	  }
 	}
 }
