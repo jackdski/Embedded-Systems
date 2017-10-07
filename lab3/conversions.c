@@ -44,3 +44,36 @@ int atoi(char * a) {
 	finalInt = returnArray[2] + (10 * returnArray[1]) + (100 * returnArray[0]);
 	return finalInt;
 }
+
+
+void ftoa(float number, int decimalPlace, int size, char * str) {
+	int tens = 10;
+	int i = decimalPlace - 1;
+	while (i > 0) {
+		tens = tens * 10;
+		i--;
+	}
+	number = number * (float)tens;
+	int numberInt = (int)number;
+
+	itoa(numberInt, size-1, str);
+
+	int deciPlace = decimalPlace +1;
+	char tempStr[deciPlace];
+
+	int j = 0; 
+	while (j < deciPlace) {
+		tempStr[j] = str[deciPlace + j];
+		j++;
+	}
+
+	str[size - decimalPlace - 1] = '.';
+
+	deciPlace = size - decimalPlace;
+	j = 0;
+	while (deciPlace <= size){
+		str[deciPlace] = tempStr[j];
+		deciPlace++;
+		j++;
+	}
+}
