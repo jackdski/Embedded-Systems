@@ -13,3 +13,5 @@
 
 // Converts a string of numbers into an integer
 int atoi(char * a);
+
+void itoa(uint8_t num, int size, char * str );
