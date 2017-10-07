@@ -7,6 +7,7 @@
 #include "uart.h"
 #include "circbuf.h"
 
+
 extern CircBuf_t * TXBuf;
 extern CircBuf_t * RXBuf;
 extern uint8_t work;
@@ -81,7 +82,7 @@ void EUSCIA0_IRQHandler(){
 
     if (EUSCI_A0->IFG & BIT0){
         uint8_t data = EUSCI_A0->RXBUF;
-        if(data == '\n' | (RXBuf->num_items == RXBuf->length)){
+        if(data == '\n' || (RXBuf->length == RXBuf->num_items)){
             work = 1;
             //EUSCI_A0->CTLW0 |= EUSCI_A_CTLW0_SWRST;     //Put eUSCI in reset to pause RX
         }
