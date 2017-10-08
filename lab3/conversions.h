@@ -3,7 +3,7 @@
 * conversions.h
 * Author: Jack Danielski and Avery Anderson
 * Date: 10-6-2017
-* 
+*
 */
 
 #include "msp.h"
@@ -13,6 +13,5 @@
 
 // Converts a string of numbers into an integer
 int atoi(char * a);
-
-void itoa(uint8_t num, int size, char * str );
+void itoa(uint16_t num, int size, char * str );
 void ftoa(float number, int decimalPlace, int size, char * str);
