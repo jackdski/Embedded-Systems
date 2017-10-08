@@ -14,6 +14,8 @@
 
 #include <stdint.h>
 
+// homemade itoa function
+/*
 void itoa(uint16_t num, int8_t size, uint8_t * str ) {
     int8_t i;
     i = size;
@@ -30,6 +32,7 @@ void itoa(uint16_t num, int8_t size, uint8_t * str ) {
         }
     }
 }
+*/
 
 // Converts a string of numbers into an integer
 int16_t atoi(char * a) {
