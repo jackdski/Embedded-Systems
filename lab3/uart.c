@@ -6,7 +6,7 @@
  */
 #include "uart.h"
 #include "circbuf.h"
-
+#include "processing.h"
 
 extern CircBuf_t * TXBuf;
 extern CircBuf_t * RXBuf;
@@ -114,5 +114,22 @@ void transmitRX(){
         addItemCircBuf(RXBuf, temp);
         addItemCircBuf(TXBuf, temp);
     }
+    UART_send_byte(removeItem(TXBuf));
+
+    while(!isEmpty(TXBuf));
+
+    addItemCircBuf(TXBuf, 0x0A);
+    addItemCircBuf(TXBuf, 0x0D);
+
+
+    uint8_t * str1 = "You have used ";
+    uint8_t str2 [3];
+    itoa(RXBuf->num_items,3,str2);
+    uint8_t * str3 = " characters out of a possible 256";
+
+    loadToBuf(TXBuf,str1, 14);
+    loadToBuf(TXBuf,str2, 3);
+    loadToBuf(TXBuf,str3, 33);
+
     UART_send_byte(removeItem(TXBuf));
 }
