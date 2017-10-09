@@ -16,4 +16,3 @@ void UART_send_byte(uint8_t data);
 void transmitRX();
 
 #endif
- 
