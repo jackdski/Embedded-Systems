@@ -1,78 +1,173 @@
 /*
-*
-* conversions.c
-* Author: Jack Danielski and Avery Anderson
-* Date: 10-6-2017
-*
-*/
-
-#include "msp.h"
-#include "uart.h"
-#include "circbuf.h"
+ * processing.c
+ *
+ *  Created on: Oct 3, 2017
+ *      Author: amabo
+ */
 #include "processing.h"
+#include "circbuf.h"
+#include "uart.h"
 #include "conversions.h"
+#include "eScooter.h"
 
-void itoa(uint16_t num, int size, char * str ) {
-    int i;
-    i = size;
-    while (i >= 0) {
-        if ( i == size) {
-            str[i] = '\0';
-            i--;
-        }
-        else {
-            str[i] = num % 10;
-            str[i] += 48;
-            num = num / 10;
-            i--;
-        }
-    }
+extern uint8_t transmit;
+extern CircBuf_t * TXBuf;
+extern CircBuf_t * RXBuf;
+
+extern uint32_t alp; //Number of alphabetical chars
+extern uint32_t pun; //Number of punctuation chars
+extern uint32_t num; //Number of numerical chars
+extern uint32_t whi; //Number of white chars
+extern uint32_t ran; //Number of random chars
+
+extern es_V * myScooter;
+extern uint8_t updateDistance;
+
+void configurePorts(){
+    P1->SEL0 &= ~(BIT1 | BIT4);
+    P1->SEL1 &= ~(BIT1 | BIT4);
+    P1->DIR  &= ~(BIT1 | BIT4);
+    P1->REN  |=  (BIT1 | BIT4);
+    P1->OUT  |=  (BIT1 | BIT4);
+    P1->IES  |=  (BIT1 | BIT4);
+
+    P1->DIR |= BIT0;
+
+    P1->IFG   = 0;
+    P1->IE   |=  (BIT1 | BIT4);
+    NVIC_EnableIRQ(PORT1_IRQn);
 }
 
-// Converts a string of numbers into an integer
-int atoi(char * a) {
-    int returnArray [3];
+void PORT1_IRQHandler(){
+    if(P1->IFG & BIT1){
+        resetCircBuf(RXBuf);
+    }
+    else if(P1->IFG & BIT4){
+        transmit = 1;
+    }
+    //P1->OUT ^= BIT0;
+    updateDistance = 1;
+    P1->IFG = 0;
+}
 
-    int count = 0;
-    while (count < 3) {
-        returnArray[count] = a[count] - 48;
-        count++;
+void analyzeBuf(){
+    if(isEmpty(RXBuf)){
+        return;
+    }
+    volatile uint32_t length = RXBuf->num_items;
+    volatile uint32_t i;
+    uint8_t temp;
+
+    for(i = 0; i < length; i++){
+        temp = removeItem(RXBuf);
+        addItemCircBuf(RXBuf, temp);
+        analyzeChr(temp);
     }
 
-    int finalInt = 0;
-    finalInt = returnArray[2] + (10 * returnArray[1]) + (100 * returnArray[0]);
-    return finalInt;
+    uint8_t * str1 = "We saw";
+    uint8_t * str2 = " letters";
+    uint8_t * str3 = " punctuation marks";
+    uint8_t * str4 = " numbers";
+    uint8_t * str5 = " white-space characters";
+    uint8_t * str6 = " other characters";
+
+    uint8_t alps[3];
+    uint8_t nums[3];
+    uint8_t puns[3];
+    uint8_t whis[3];
+    uint8_t rans[3];
+
+    itoa((uint16_t)alp,3,alps);
+    itoa((uint16_t)num,3,nums);
+    itoa((uint16_t)pun,3,puns);
+    itoa((uint16_t)whi,3,whis);
+    itoa((uint16_t)ran,3,rans);
+
+    alp = 0;
+    num = 0;
+    pun = 0;
+    whi = 0;
+    ran = 0;
+
+    loadToBuf(TXBuf,str1, 6);
+    addItemCircBuf(TXBuf, 0x0D);
+
+    loadToBuf(TXBuf,alps, 3);
+
+    loadToBuf(TXBuf,str2, 8);
+    addItemCircBuf(TXBuf, 0x0D);
+
+    loadToBuf(TXBuf,puns, 3);
+
+    loadToBuf(TXBuf,str3, 18);
+    addItemCircBuf(TXBuf, 0x0D);
+
+    loadToBuf(TXBuf,nums, 3);
+
+    loadToBuf(TXBuf,str4, 8);
+    addItemCircBuf(TXBuf, 0x0D);
+
+    loadToBuf(TXBuf,whis, 3);
+
+
+    loadToBuf(TXBuf,str5, 23);
+    addItemCircBuf(TXBuf, 0x0A);
+    addItemCircBuf(TXBuf, 0x0D);
+
+    loadToBuf(TXBuf,rans, 3);
+
+    loadToBuf(TXBuf,str6, 17);
+    addItemCircBuf(TXBuf, 0x0A);
+    addItemCircBuf(TXBuf, 0x0D);
+
+    addItemCircBuf(TXBuf, 0x0A);
+
+    UART_send_byte(removeItem(TXBuf));
+
+    //COPY RX STILL
+
+    //UART_send_byte(removeItem(TXBuf));
+    while(!isEmpty(TXBuf));
+    for(i = 0; i < length; i++){
+        addItemCircBuf(TXBuf, removeItem(RXBuf));
+    }
+    UART_send_byte(removeItem(TXBuf));
+
 }
 
 
-void ftoa(float number, int decimalPlace, int size, char * str) {
-    int tens = 10;
-    int i = decimalPlace - 1;
-    while (i > 0) {
-        tens = tens * 10;
-        i--;
+void analyzeChr(uint8_t chr){
+    if (chr >= 'A' && chr <= 'Z') {
+        alp++;
     }
-    number = number * (float)tens;
-    int numberInt = (int)number;
-
-    itoa(numberInt, size-1, str);
-
-    int deciPlace = decimalPlace +1;
-    char tempStr[6];
-
-    int j = 0;
-    while (j < deciPlace) {
-        tempStr[j] = str[deciPlace + j];
-        j++;
+    else if (chr >= 'a' && chr <= 'z') {
+        alp++;
+    }
+    else if (chr == 33 || chr == 46 || chr == 63 || chr == 44
+                       || chr == 39 || chr == 45) {
+        pun++;
+    }
+    else if (chr >= 48 && chr <= 57) {
+        num++;
     }
 
-    str[size - decimalPlace - 1] = '.';
-
-    deciPlace = size - decimalPlace;
-    j = 0;
-    while (deciPlace <= size){
-        str[deciPlace] = tempStr[j];
-        deciPlace++;
-        j++;
+    else if (chr == 32 || chr == 9) {
+        whi++;
+    }
+    else {
+        ran++;
     }
 }
+/*
+void itoa(uint32_t num, uint8_t * str){
+    str[2] = (uint32_t)num%10;
+    num = num/10;
+    str[1] = (uint32_t)num%10;
+    num = num/10;
+    str[0] = (uint32_t)num%10;
+    num = num/10;
+
+    str[0] += 48;
+    str[1] += 48;
+    str[2] += 48;
+}*/
