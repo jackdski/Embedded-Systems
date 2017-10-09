@@ -15,8 +15,8 @@
 #include "processing.h"
 
 // Converts a string of numbers into an integer
-int atoi(char * a);
-void itoa(uint16_t num, int size, char * str );
-void ftoa(float number, int decimalPlace, int size, char * str);
+//int atoi(char * a);
+void itoa(uint16_t num, int8_t size, uint8_t * str );
+void ftoa(float number, uint8_t decimalPlace, uint8_t size, uint8_t * str);
 
 #endif
