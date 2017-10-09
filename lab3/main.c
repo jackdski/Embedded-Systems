@@ -2,12 +2,16 @@
 #include "uart.h"
 #include "circbuf.h"
 #include "processing.h"
+#include "eScooter.h"
 
 CircBuf_t * TXBuf;
 CircBuf_t * RXBuf;
 
+
+
 uint8_t work = 0; //Flag bit. Is one if I want to process info
 uint8_t transmit = 0; //Flag bit. is one if I want to send the RXBuf
+uint8_t updateDistance = 0; //Flag Bit. Is one if we transmit eScooter distance
 uint32_t alp = 0; //Number of alphabetical chars
 uint32_t pun = 0; //Number of punctuation chars
 uint32_t num = 0; //Number of numerical chars
@@ -42,6 +46,7 @@ void main(void)
 	configure_clocks();
 	configure_serial_port();
 	configurePorts();
+	configure_eScooter();
 
 
 #ifdef  UART_TESTS
@@ -64,6 +69,8 @@ while(1){
 #ifdef  UART_TESTS
 	  UART_send_n(ptr, 1);
 #endif
+
+#ifdef DEMO
 	  if(work){
 	      work = 0;
 	      analyzeBuf();
@@ -71,6 +78,12 @@ while(1){
 	  if(transmit==1){
 	      transmit = 0;
 	      transmitRX();
+	  }
+#endif
+
+	  if(updateDistance){
+	      updateDistance = 0;
+	      transmitDistance();
 	  }
 	}
 }
