@@ -14,8 +14,6 @@
 
 #include <stdint.h>
 
-// homemade itoa function
-/*
 void itoa(uint16_t num, int8_t size, uint8_t * str ) {
     int8_t i;
     i = size;
@@ -32,7 +30,6 @@ void itoa(uint16_t num, int8_t size, uint8_t * str ) {
         }
     }
 }
-*/
 
 // Converts a string of numbers into an integer
 int16_t atoi(char * a) {
@@ -50,7 +47,7 @@ int16_t atoi(char * a) {
 }
 
 
-void ftoa(float number, int8_t decimalPlace, int8_t size, uint8_t * str) {
+void ftoa(float number, uint8_t decimalPlace, uint8_t size, uint8_t * str) {
     uint8_t tens = 10;
     int8_t i = decimalPlace - 1;
     while (i > 0) {
