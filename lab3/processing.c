@@ -10,6 +10,8 @@
 #include "conversions.h"
 #include "eScooter.h"
 
+#define EXTRACREDIT
+
 extern uint8_t transmit;
 extern CircBuf_t * TXBuf;
 extern CircBuf_t * RXBuf;
@@ -21,7 +23,6 @@ extern uint32_t whi; //Number of white space chars
 extern uint32_t ran; //Number of random chars
 extern uint32_t wrd; //Number of words there are
 extern uint32_t systickCounter; //Count how many time SysTick counts down
-
 
 extern es_V * myScooter;
 extern uint8_t updateDistance;
@@ -204,12 +205,12 @@ uint8_t isWhiteSpace(uint8_t chr){
 
 void transmitEC(){
 
-    if (systickCounter < 10) {
+    /*if (systickCounter < 10) {
         time = 1;
     }
     else {
-        time = systickCounter; // produce time in seconds
-    }
+        time = systickCounter * 10; // produce time in seconds
+    }*/
 
     uint8_t * str1 = "We saw";
     uint8_t * str2 = " letters";
@@ -234,7 +235,7 @@ void transmitEC(){
     itoa(whi,10,whis);
     itoa(ran,10,rans);
     itoa(words,10,wordss);
-    itoa(time, 10,zeit);
+    itoa(time,10,zeit);
 
     alp = 0;
     num = 0;
@@ -296,3 +297,11 @@ void transmitEC(){
 
     UART_send_byte(removeItem(TXBuf));
 }
+
+#ifdef EXTRACREDIT
+void SysTick_Handler (){
+     systickCounter++;
+     if((systickCounter%10) == 0)
+         time++;
+}
+#endif
