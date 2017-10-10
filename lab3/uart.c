@@ -103,15 +103,15 @@ void EUSCIA0_IRQHandler(){
 #ifdef EXTRACREDIT
     if (EUSCI_A0->IFG & BIT0){
         currentChar = EUSCI_A0->RXBUF;
-        if(words ==0){
-            time = 0;
-            systickCounter = 0;
-        }
         if(currentChar == 26){
             transmitEC();
         }
         else{
             work = 1;
+        }
+        if(words ==0){
+            time = 0;
+            systickCounter = 0;
         }
     }
 #endif
