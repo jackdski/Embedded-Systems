@@ -14,6 +14,8 @@
 void configurePorts();
 void analyzeBuf();
 void analyzeChr(uint8_t chr);
-//void itoa(uint32_t num, uint8_t * str);
+void transmitEC();
+void analyzeChrEC(uint8_t chr);
+uint8_t isWhiteSpace(uint8_t chr);
 
 #endif /* PROCESSING_H_ */
