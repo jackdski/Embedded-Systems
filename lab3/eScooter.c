@@ -21,12 +21,13 @@ void PORT3_IRQHandler(){
         myScooter->distanceTraveled = (myScooter->beamBreaks)*(myScooter->distancePerBreak);
         P1->OUT ^= BIT0;
     }
-    if(myScooter->beamBreaks%(4*14) == 0){
+    if(myScooter->beamBreaks%(5*14) == 0){
         updateDistance = 1;
     }
     P3->IFG = 0;
 }
 
+#ifdef ESCOOT
 void SysTick_Handler (){
 
     myScooter->timesTimed++;
@@ -36,6 +37,7 @@ void SysTick_Handler (){
     myScooter->bBSinceLast = 0;
     //P1->OUT ^= BIT0 ;
 }
+#endif
 
 es_V * make_eScoot(){
     es_V * eScoot = (es_V *)malloc(sizeof(es_V));
