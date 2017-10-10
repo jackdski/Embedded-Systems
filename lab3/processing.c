@@ -2,7 +2,7 @@
  * processing.c
  *
  *  Created on: Oct 3, 2017
- *      Author: amabo
+ *      Author: amabo and Jack Danielski
  */
 #include "processing.h"
 #include "circbuf.h"
@@ -17,12 +17,16 @@ extern CircBuf_t * RXBuf;
 extern uint32_t alp; //Number of alphabetical chars
 extern uint32_t pun; //Number of punctuation chars
 extern uint32_t num; //Number of numerical chars
-extern uint32_t whi; //Number of white chars
+extern uint32_t whi; //Number of white space chars
 extern uint32_t ran; //Number of random chars
+extern uint32_t wrd; //Number of words there are
+extern uint32_t systickCounter; //Count how many time SysTick counts down
+
 
 extern es_V * myScooter;
 extern uint8_t updateDistance;
 
+volatile uint32_t time = 0;
 volatile uint32_t words = 0;
 volatile uint8_t lastChr = ' ';
 
@@ -199,6 +203,14 @@ uint8_t isWhiteSpace(uint8_t chr){
 
 
 void transmitEC(){
+
+    if (systickCounter < 10) {
+        time = 1;
+    }
+    else {
+        time = systickCounter; // produce time in seconds
+    }
+
     uint8_t * str1 = "We saw";
     uint8_t * str2 = " letters";
     uint8_t * str3 = " punctuation marks";
@@ -206,6 +218,7 @@ void transmitEC(){
     uint8_t * str5 = " white-space characters";
     uint8_t * str6 = " other characters";
     uint8_t * str7 = " words total";
+    uint8_t * str8 = " seconds";
 
     uint8_t alps[10];
     uint8_t nums[10];
@@ -213,6 +226,7 @@ void transmitEC(){
     uint8_t whis[10];
     uint8_t rans[10];
     uint8_t wordss[10];
+    uint8_t zeit[10];
 
     itoa(alp,10,alps);
     itoa(num,10,nums);
@@ -220,6 +234,7 @@ void transmitEC(){
     itoa(whi,10,whis);
     itoa(ran,10,rans);
     itoa(words,10,wordss);
+    itoa(time, 10,zeit);
 
     alp = 0;
     num = 0;
@@ -227,6 +242,9 @@ void transmitEC(){
     whi = 0;
     ran = 0;
     words = 0;
+    time = 0;
+    systickCounter = 0;
+
     lastChr = ' ';
 
     loadToBuf(TXBuf,str1, 6);
@@ -235,16 +253,19 @@ void transmitEC(){
     loadToBuf(TXBuf,alps, 10);
 
     loadToBuf(TXBuf,str2, 8);
+    addItemCircBuf(TXBuf, 0x0A);
     addItemCircBuf(TXBuf, 0x0D);
 
     loadToBuf(TXBuf,puns, 10);
 
     loadToBuf(TXBuf,str3, 18);
+    addItemCircBuf(TXBuf, 0x0A);
     addItemCircBuf(TXBuf, 0x0D);
 
     loadToBuf(TXBuf,nums, 10);
 
     loadToBuf(TXBuf,str4, 8);
+    addItemCircBuf(TXBuf, 0x0A);
     addItemCircBuf(TXBuf, 0x0D);
 
     loadToBuf(TXBuf,whis, 10);
@@ -266,6 +287,11 @@ void transmitEC(){
     addItemCircBuf(TXBuf, 0x0A);
     addItemCircBuf(TXBuf, 0x0D);
 
+    loadToBuf(TXBuf,zeit, 10);
+
+    loadToBuf(TXBuf,str8, 8);
+    addItemCircBuf(TXBuf, 0x0A);
+    addItemCircBuf(TXBuf, 0x0D);
     addItemCircBuf(TXBuf, 0x0A);
 
     UART_send_byte(removeItem(TXBuf));
