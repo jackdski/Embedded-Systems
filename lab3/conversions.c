@@ -55,7 +55,7 @@ void ftoa(float number, uint8_t decimalPlace, uint8_t size, uint8_t * str) {
         i--;
     }
     number = number * (float)tens;
-    uint16_t numberInt = (int)number;
+    uint32_t numberInt = (int)number;
 
     itoa(numberInt, size-1, str);
 
