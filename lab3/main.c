@@ -2,7 +2,7 @@
 #include "uart.h"
 #include "circbuf.h"
 #include "processing.h"
-
+#include <stdio.h>
 #include "eScooter.h"
 
 
