@@ -15,6 +15,10 @@ extern CircBuf_t * TXBuf;
 extern CircBuf_t * RXBuf;
 extern uint8_t work;
 extern uint8_t currentChar;
+extern volatile uint32_t words;
+extern uint32_t systickCounter; //Count how many time SysTick counts down
+extern uint32_t time;
+
 
 void configure_serial_port(){
     //Configure UART pins, set 2-UART pins to UART mode
@@ -99,6 +103,10 @@ void EUSCIA0_IRQHandler(){
 #ifdef EXTRACREDIT
     if (EUSCI_A0->IFG & BIT0){
         currentChar = EUSCI_A0->RXBUF;
+        if(words ==0){
+            time = 0;
+            systickCounter = 0;
+        }
         if(currentChar == 26){
             transmitEC();
         }
@@ -128,11 +136,13 @@ void transmitRX(){
     volatile uint32_t i;
     uint8_t temp;
 
-    for(i = 0; i < length+1; i++){
+    for(i = 0; i < length; i++){
         temp = removeItem(RXBuf);
         addItemCircBuf(RXBuf, temp);
         addItemCircBuf(TXBuf, temp);
     }
+    addItemCircBuf(TXBuf, temp);
+
     UART_send_byte(removeItem(TXBuf));
 
     while(!isEmpty(TXBuf));
