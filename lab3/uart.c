@@ -4,13 +4,17 @@
  *  Created on: Sep 26, 2017
  *      Author: amabo
  */
+#define EXTRACREDIT
+
 #include "uart.h"
 #include "circbuf.h"
 #include "processing.h"
+#include "conversions.h"
 
 extern CircBuf_t * TXBuf;
 extern CircBuf_t * RXBuf;
 extern uint8_t work;
+extern uint8_t currentChar;
 
 void configure_serial_port(){
     //Configure UART pins, set 2-UART pins to UART mode
@@ -80,6 +84,7 @@ void EUSCIA0_IRQHandler(){
     }
 #endif
 
+#ifdef DEMO
     if (EUSCI_A0->IFG & BIT0){
         uint8_t data = EUSCI_A0->RXBUF;
         if(data == '\n' || (RXBuf->length == RXBuf->num_items)){
@@ -89,6 +94,20 @@ void EUSCIA0_IRQHandler(){
             addItemCircBuf(RXBuf, data);
 
     }
+#endif
+
+#ifdef EXTRACREDIT
+    if (EUSCI_A0->IFG & BIT0){
+        currentChar = EUSCI_A0->RXBUF;
+        if(currentChar == 26){
+            transmitEC();
+        }
+        else{
+            work = 1;
+        }
+    }
+#endif
+
     if (EUSCI_A0->IFG & BIT1){
         //Transmit Stuff
         if(isEmpty(TXBuf)){
@@ -109,7 +128,7 @@ void transmitRX(){
     volatile uint32_t i;
     uint8_t temp;
 
-    for(i = 0; i < length; i++){
+    for(i = 0; i < length+1; i++){
         temp = removeItem(RXBuf);
         addItemCircBuf(RXBuf, temp);
         addItemCircBuf(TXBuf, temp);
