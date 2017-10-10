@@ -21,7 +21,6 @@ extern uint32_t pun; //Number of punctuation chars
 extern uint32_t num; //Number of numerical chars
 extern uint32_t whi; //Number of white space chars
 extern uint32_t ran; //Number of random chars
-extern uint32_t wrd; //Number of words there are
 extern uint32_t systickCounter; //Count how many time SysTick counts down
 
 extern es_V * myScooter;
