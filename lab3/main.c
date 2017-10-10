@@ -2,7 +2,9 @@
 #include "uart.h"
 #include "circbuf.h"
 #include "processing.h"
+
 #include "eScooter.h"
+
 
 CircBuf_t * TXBuf;
 CircBuf_t * RXBuf;
@@ -17,7 +19,6 @@ uint32_t pun = 0; //Number of punctuation chars
 uint32_t num = 0; //Number of numerical chars
 uint32_t whi = 0; //Number of white chars
 uint32_t ran = 0; //Number of random chars
-uint32_t wrd; //Number of words there are
 uint32_t systickCounter = 0; //Count how many time SysTick counts down
 
 
@@ -73,7 +74,7 @@ void main(void)
 #endif
 
 #ifdef EXTRACREDIT
-    SysTick->LOAD = 1210000;   // Give SysTick a starting value to count down from
+    SysTick->LOAD = 1210250;   // Give SysTick a starting value to count down from
     SysTick->CTRL = BIT0 | BIT1 | BIT2;  // Enable SysTick
 #endif
 
@@ -109,9 +110,6 @@ while(1){
       if(transmit){
           transmit = 0;
           transmitEC();
-      }
-      if(SysTick->VAL == 0) {
-          systickCounter++;
       }
 #endif
 
