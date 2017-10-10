@@ -23,6 +23,9 @@ extern uint32_t ran; //Number of random chars
 extern es_V * myScooter;
 extern uint8_t updateDistance;
 
+volatile uint32_t words = 0;
+volatile uint8_t lastChr = ' ';
+
 void configurePorts(){
     P1->SEL0 &= ~(BIT1 | BIT4);
     P1->SEL1 &= ~(BIT1 | BIT4);
@@ -77,11 +80,11 @@ void analyzeBuf(){
     uint8_t whis[3];
     uint8_t rans[3];
 
-    itoa((uint16_t)alp,3,alps);
-    itoa((uint16_t)num,3,nums);
-    itoa((uint16_t)pun,3,puns);
-    itoa((uint16_t)whi,3,whis);
-    itoa((uint16_t)ran,3,rans);
+    itoa(alp,3,alps);
+    itoa(num,3,nums);
+    itoa(pun,3,puns);
+    itoa(whi,3,whis);
+    itoa(ran,3,rans);
 
     alp = 0;
     num = 0;
@@ -124,7 +127,6 @@ void analyzeBuf(){
 
     UART_send_byte(removeItem(TXBuf));
 
-    //COPY RX STILL
 
     //UART_send_byte(removeItem(TXBuf));
     while(!isEmpty(TXBuf));
@@ -158,16 +160,113 @@ void analyzeChr(uint8_t chr){
         ran++;
     }
 }
-/*
-void itoa(uint32_t num, uint8_t * str){
-    str[2] = (uint32_t)num%10;
-    num = num/10;
-    str[1] = (uint32_t)num%10;
-    num = num/10;
-    str[0] = (uint32_t)num%10;
-    num = num/10;
 
-    str[0] += 48;
-    str[1] += 48;
-    str[2] += 48;
-}*/
+void analyzeChrEC(uint8_t chr){
+
+    if(isWhiteSpace(lastChr) && (isWhiteSpace(chr)==0) ){
+        words++;
+    }
+    lastChr = chr;
+
+    if (chr >= 'A' && chr <= 'Z') {
+        alp++;
+    }
+    else if (chr >= 'a' && chr <= 'z') {
+        alp++;
+    }
+    else if (chr == 33 || chr == 46 || chr == 63 || chr == 44
+                       || chr == 39 || chr == 45) {
+        pun++;
+    }
+    else if (chr >= 48 && chr <= 57) {
+        num++;
+    }
+
+    else if (isWhiteSpace(chr)) {
+        whi++;
+    }
+    else {
+        ran++;
+    }
+}
+
+uint8_t isWhiteSpace(uint8_t chr){
+    if (chr == 32 || chr == 9 || chr == 10 || chr == 13) {
+        return 1;
+    }
+    return 0;
+}
+
+
+void transmitEC(){
+    uint8_t * str1 = "We saw";
+    uint8_t * str2 = " letters";
+    uint8_t * str3 = " punctuation marks";
+    uint8_t * str4 = " numbers";
+    uint8_t * str5 = " white-space characters";
+    uint8_t * str6 = " other characters";
+    uint8_t * str7 = " words total";
+
+    uint8_t alps[10];
+    uint8_t nums[10];
+    uint8_t puns[10];
+    uint8_t whis[10];
+    uint8_t rans[10];
+    uint8_t wordss[10];
+
+    itoa(alp,10,alps);
+    itoa(num,10,nums);
+    itoa(pun,10,puns);
+    itoa(whi,10,whis);
+    itoa(ran,10,rans);
+    itoa(words,10,wordss);
+
+    alp = 0;
+    num = 0;
+    pun = 0;
+    whi = 0;
+    ran = 0;
+    words = 0;
+    lastChr = ' ';
+
+    loadToBuf(TXBuf,str1, 6);
+    addItemCircBuf(TXBuf, 0x0D);
+
+    loadToBuf(TXBuf,alps, 10);
+
+    loadToBuf(TXBuf,str2, 8);
+    addItemCircBuf(TXBuf, 0x0D);
+
+    loadToBuf(TXBuf,puns, 10);
+
+    loadToBuf(TXBuf,str3, 18);
+    addItemCircBuf(TXBuf, 0x0D);
+
+    loadToBuf(TXBuf,nums, 10);
+
+    loadToBuf(TXBuf,str4, 8);
+    addItemCircBuf(TXBuf, 0x0D);
+
+    loadToBuf(TXBuf,whis, 10);
+
+
+    loadToBuf(TXBuf,str5, 23);
+    addItemCircBuf(TXBuf, 0x0A);
+    addItemCircBuf(TXBuf, 0x0D);
+
+    loadToBuf(TXBuf,rans, 10);
+
+    loadToBuf(TXBuf,str6, 17);
+    addItemCircBuf(TXBuf, 0x0A);
+    addItemCircBuf(TXBuf, 0x0D);
+
+    loadToBuf(TXBuf,wordss, 10);
+
+    loadToBuf(TXBuf,str7, 12);
+    addItemCircBuf(TXBuf, 0x0A);
+    addItemCircBuf(TXBuf, 0x0D);
+
+    addItemCircBuf(TXBuf, 0x0A);
+
+    UART_send_byte(removeItem(TXBuf));
+}
