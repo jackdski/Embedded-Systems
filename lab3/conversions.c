@@ -14,7 +14,7 @@
 
 #include <stdint.h>
 
-void itoa(uint16_t num, int8_t size, uint8_t * str ) {
+void itoa(uint32_t num, int8_t size, uint8_t * str ) {
     int8_t i;
     i = size;
     while (i >= 0) {
