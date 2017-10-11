@@ -27,6 +27,7 @@ void PORT3_IRQHandler(){
     P3->IFG = 0;
 }
 
+// used to calculate the veloctiy 
 #ifdef ESCOOT
 void SysTick_Handler (){
 
@@ -39,6 +40,7 @@ void SysTick_Handler (){
 }
 #endif
 
+// used to initialize the es_V type
 es_V * make_eScoot(){
     es_V * eScoot = (es_V *)malloc(sizeof(es_V));
 
@@ -74,6 +76,7 @@ void configure_eScooter(){
       NVIC_EnableIRQ(PORT3_IRQn);
 }
 
+// transmit how far the scooter has gone over UART
 void transmitDistance(){
     addItemCircBuf(TXBuf, 0x0A);
     addItemCircBuf(TXBuf, 0x0D);
