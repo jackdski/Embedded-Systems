@@ -14,6 +14,10 @@
 
 #include <stdint.h>
 
+// convert an interger to a string
+// num = value being converted
+// size = how many places the digit spans
+// str = string to store the string value in
 void itoa(uint32_t num, int8_t size, uint8_t * str ) {
     int8_t i;
     i = size;
@@ -46,7 +50,11 @@ int16_t atoi(char * a) {
     return finalInt;
 }
 
-
+// converts a float to a string
+// number = float being converted 
+// decimalPlace = about of decimals desired
+// size = size str needs to be to hold the float
+// str = string to store the string value in
 void ftoa(float number, uint8_t decimalPlace, uint8_t size, uint8_t * str) {
     uint8_t tens = 10;
     int8_t i = decimalPlace - 1;
