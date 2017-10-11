@@ -26,9 +26,10 @@ extern uint32_t systickCounter; //Count how many time SysTick counts down
 extern es_V * myScooter;
 extern uint8_t updateDistance;
 
-volatile uint32_t time = 0;
-volatile uint32_t words = 0;
-volatile uint8_t lastChr = ' ';
+volatile uint32_t time = 0;     // string to store how many seconds it takes to process a file
+volatile uint32_t words = 0;    // stores the amount of words in the file
+// stores the char before the char being consider to compare to so words can be determined
+volatile uint8_t lastChr = ' '; 
 
 void configurePorts(){
     P1->SEL0 &= ~(BIT1 | BIT4);
@@ -46,6 +47,7 @@ void configurePorts(){
 }
 
 void PORT1_IRQHandler(){
+    // If the left button is pressed reset the receive buffer
     if(P1->IFG & BIT1){
         resetCircBuf(RXBuf);
     }
@@ -57,6 +59,7 @@ void PORT1_IRQHandler(){
     P1->IFG = 0;
 }
 
+// Function that parses strings and displays its characteristics
 void analyzeBuf(){
     if(isEmpty(RXBuf)){
         return;
@@ -141,7 +144,7 @@ void analyzeBuf(){
 
 }
 
-
+// function that determines if a char is a letter, number, whitespace, etc.
 void analyzeChr(uint8_t chr){
     if (chr >= 'A' && chr <= 'Z') {
         alp++;
@@ -194,6 +197,7 @@ void analyzeChrEC(uint8_t chr){
     }
 }
 
+// determines if a char is whitespace
 uint8_t isWhiteSpace(uint8_t chr){
     if (chr == 32 || chr == 9 || chr == 10 || chr == 13) {
         return 1;
@@ -201,7 +205,8 @@ uint8_t isWhiteSpace(uint8_t chr){
     return 0;
 }
 
-
+// converts the counted values to strings, loads them to the TXBUF,
+// and then sends them over UART
 void transmitEC(){
 
     /*if (systickCounter < 10) {
