@@ -103,6 +103,7 @@ void EUSCIA0_IRQHandler(){
 #ifdef EXTRACREDIT
     if (EUSCI_A0->IFG & BIT0){
         currentChar = EUSCI_A0->RXBUF;
+        // check if EOF has been reached
         if(currentChar == 26){
             transmitEC();
         }
@@ -127,6 +128,7 @@ void EUSCIA0_IRQHandler(){
 
 }
 
+// Display of how much the RXBuf has been used
 void transmitRX(){
 
     if(isEmpty(RXBuf)){
