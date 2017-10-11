@@ -11,6 +11,7 @@
 #include "circbuf.h"
 #include <stdlib.h>
 
+// Function to create a circle buffer of a specified length to a prexisitng CircBuf
 CircBuf_t * createCircBuf(uint32_t length) {
     if(length>0){
         CircBuf_t * ourBuf = malloc(sizeof(CircBuf_t));
@@ -30,13 +31,16 @@ CircBuf_t * createCircBuf(uint32_t length) {
     return NULL;
 }
 
+// Delete a CircBuf
 void deleteCircBuf(CircBuf_t * buf) {
     if(buf){
         free(buf->buffer);
         free(buf);
     }
 }
-
+// Reset CircBuf by setting everything inside of 
+// the buffer equal to zero, moving the head and tail, 
+// and seting the number of items in the buffer to zero
 void resetCircBuf(CircBuf_t * buf){
     if(!buf){
         return;
@@ -63,6 +67,7 @@ int8_t isFullCircBuf(CircBuf_t * buf) {
     }
 }
 
+// add an item to the tail of the circBuf
 void addItemCircBuf(CircBuf_t * buf, uint8_t item) {
     if(!buf){
         return;
@@ -76,6 +81,7 @@ void addItemCircBuf(CircBuf_t * buf, uint8_t item) {
     buf->num_items ++;
 }
 
+// check if the CircBuf has and items in it
 uint8_t isEmpty(CircBuf_t * buf){
     if(!buf){
         return 1;
@@ -86,6 +92,7 @@ uint8_t isEmpty(CircBuf_t * buf){
     return 0;
 }
 
+// add a string of a certain length to the buffer
 void loadToBuf(CircBuf_t * buf, uint8_t * string, uint8_t length){
     if(!buf || !string ){
         return;
@@ -98,6 +105,7 @@ void loadToBuf(CircBuf_t * buf, uint8_t * string, uint8_t length){
 
 }
 
+// remove and return a piece of data from the circBuf
 uint8_t removeItem(CircBuf_t * buf) {
     if(!buf){
         return 0xFF;
