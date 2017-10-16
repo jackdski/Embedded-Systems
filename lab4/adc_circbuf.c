@@ -7,7 +7,7 @@
  */
 
 #include "adc_circbuf.h"
-//#include <stdlib.h>
+#include <stdlib.h>
 
 CircBuf_t * createCircBuf(uint32_t length) {
     if(length>0){

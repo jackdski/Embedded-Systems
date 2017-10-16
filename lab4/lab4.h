@@ -15,7 +15,7 @@
 #include <stdint.h>
 
 // Converts a string of numbers into an integer
-int  atoi(char * a);
+uint32_t  atoi(uint8_t * a);
 void itoa(uint32_t num, int8_t size, uint8_t * str );
 void ftoa(float number, uint8_t decimalPlace, uint8_t size, uint8_t * str);
 

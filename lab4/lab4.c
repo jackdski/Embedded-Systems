@@ -29,17 +29,15 @@ void itoa(uint32_t num, int8_t size, uint8_t * str ) {
 
 
 // Converts a string of numbers into an integer
-int16_t atoi(char * a) {
-    uint16_t returnArray [3];
+uint32_t atoi(uint8_t * a) {
+    uint8_t count = 0;
+    uint8_t finalInt = 0;
 
-    int8_t count = 0;
-    while (count < 3) {
-        returnArray[count] = a[count] - 48;
-        count++;
+    while (a[count]){
+        finalInt *= 10;
+        finalInt += a[count] - '0';
     }
 
-    int8_t finalInt = 0;
-    finalInt = returnArray[2] + (10 * returnArray[1]) + (100 * returnArray[0]);
     return finalInt;
 }
 
