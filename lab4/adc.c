@@ -118,6 +118,9 @@ void ADC14_IRQHandler(){
         P1->DIR |= BIT0;
         //P1->OUT ^= BIT0;
         NADC = ADC14->MEM[0];
+#ifdef PROBLEM6
+        addItemCircBuf(TXBuf, ADC14->MEM[0]);
+#endif
     }
 }
 void PORT1_IRQHandler(){
@@ -125,6 +128,11 @@ void PORT1_IRQHandler(){
         P1->OUT ^= BIT0;
         printTemps();
     }
+#ifdef PROBLEM6
+    if (P1->IFG & BIT1 || P1->IFG & BIT4) {
+        transmit = 1;
+    }
+#endif
     P1->IFG = 0;
 }
 
@@ -164,3 +172,8 @@ void printTemps(){
     }
 }
 
+void problemSix() {
+    UART_send_n(TXBuf->buffer, 60);
+    while(!isEmpty(TXBuf));
+    resetCircBuf(TXBuf);
+}
