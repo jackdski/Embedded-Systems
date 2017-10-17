@@ -7,6 +7,9 @@
  */
 
 #include "adc.h"
+#include "lab4.h"
+
+
 extern CircBuf_t * TXBuf;
 extern uint16_t NADC;
 
@@ -22,7 +25,7 @@ void configure_ADC() {
     ADC14->CTL0 |= ADC14_CTL0_SHT0_5 | ADC14_CTL0_ON | ADC14_CTL0_SHP;
     ADC14->CTL0 &= ~ADC14_CTL0_ENC;
     //conf internal temp sensor channel, set resolution to 14
-    ADC14->CTL1 = (ADC14_CTL1_TCMAP | ADC14_CTL1_RES_0);
+    ADC14->CTL1 = (ADC14_CTL1_TCMAP | ADC14_CTL1_RES_3);
 
     // Map temp analog channel to MEM0/MCTL0, set 3.3v ref
     ADC14->MCTL[0] = (ADC14_MCTLN_INCH_22 | ADC14_MCTLN_VRSEL0);
@@ -31,8 +34,22 @@ void configure_ADC() {
     while(!(REF_A->CTL0 & REF_A_CTL0_GENRDY)); // Wait for ref generator to settle
     ADC14->CTL0 |= ADC14_CTL0_ENC; // Enable Conversions
 
+    //Enable Port one button
+    P1->SEL0 &= ~(BIT1 | BIT4);
+    P1->SEL1 &= ~(BIT1 | BIT4);
+    P1->DIR  &= ~(BIT1 | BIT4);
+    P1->REN  |=  (BIT1 | BIT4);
+    P1->OUT  |=  (BIT1 | BIT4);
+    P1->IES  |=  (BIT1 | BIT4);
+
+    P1->DIR |= BIT0;
+
+    P1->IFG   = 0;
+    P1->IE   |=  (BIT1 | BIT4);
+
     //ADC14->IFGR0 &= ~ADC14_IFGR0_IFG0;
     NVIC_EnableIRQ(ADC14_IRQn); // Enable ADC interrupt in NVIC module
+    NVIC_EnableIRQ(PORT1_IRQn); // Enable port 1 buttons
 }
 
 void configure_serial_port(){
@@ -99,7 +116,51 @@ void ADC14_IRQHandler(){
 
     if(ADC14_IFGR0_IFG0){
         P1->DIR |= BIT0;
-        P1->OUT ^= BIT0;
+        //P1->OUT ^= BIT0;
         NADC = ADC14->MEM[0];
     }
 }
+void PORT1_IRQHandler(){
+    if(P1->IFG & BIT1 || P1->IFG & BIT4){
+        P1->OUT ^= BIT0;
+        printTemps();
+    }
+    P1->IFG = 0;
+}
+
+void printTemps(){
+    float Ctemp = 0;
+    uint8_t CString[7];
+
+    uint8_t KString[9];
+
+    uint8_t FString[9];
+
+    Ctemp = (0.0381)*(float)(NADC)-360.5;
+    ftoa(Ctemp,2,5,CString);
+    CString[6] = 0x0D;
+    CString[5] = 0x0A;
+
+    float Ftemp = (Ctemp*1.8)+32.0;
+
+    ftoa((Ctemp+273),2,7,KString);
+    KString[8] = 0x0D;
+    KString[7] = 0x0A;
+
+    ftoa(Ftemp,2,7,FString);
+    FString[8] = 0x0D;
+    FString[7] = 0x0A;
+
+    loadToBuf(TXBuf,"Temps in C, K and F",19);
+    addItemCircBuf(TXBuf, 0x0A);
+    addItemCircBuf(TXBuf, 0x0D);
+
+    loadToBuf(TXBuf,CString,7);
+    loadToBuf(TXBuf,KString,9);
+    loadToBuf(TXBuf,FString,9);
+
+    if(!isEmpty(TXBuf)){
+        EUSCI_A0->IFG |= BIT1;
+    }
+}
+
