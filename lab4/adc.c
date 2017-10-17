@@ -12,6 +12,7 @@
 
 extern CircBuf_t * TXBuf;
 extern uint16_t NADC;
+extern uint8_t transmit;
 
 void configure_ADC() {
     // Initialize the shared reference module
