@@ -9,6 +9,7 @@ volatile uint16_t NADC = 0;
  * main.c
  */
 CircBuf_t * TXBuf;
+uint8_t transmit = 0;
 void main(void)
 {
     WDT_A->CTL = WDT_A_CTL_PW | WDT_A_CTL_HOLD;     // stop watchdog timer
