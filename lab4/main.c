@@ -26,8 +26,15 @@ void main(void)
         // get temp value in ADC14MEM0?
         ADC14->CTL0 |= ADC14_CTL0_SC; //Sampling and conversion start
         __sleep();          //blocks here until conversion finishes
-
-
+#ifdef PROBLEM6
+        if (isFullCircBuf(TXBuf) == 1) {
+            P1->OUT ^= BIT0;
+        }
+        if (transmit) {
+            transmit = 0;
+            problemSix();
+        }
+#endif
     }
 
 }
