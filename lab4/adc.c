@@ -9,6 +9,8 @@
 #include "adc.h"
 #include "lab4.h"
 
+#define PROBLEM6
+
 
 extern CircBuf_t * TXBuf;
 extern uint16_t NADC;
@@ -44,6 +46,8 @@ void configure_ADC() {
     P1->IES  |=  (BIT1 | BIT4);
 
     P1->DIR |= BIT0;
+    P1->OUT &=  ~BIT0;
+
 
     P1->IFG   = 0;
     P1->IE   |=  (BIT1 | BIT4);
@@ -95,9 +99,6 @@ void UART_send_n(uint8_t * data, uint8_t length){
 
 
 void UART_send_byte(uint8_t data){
-#ifdef  BLOCKING
-    while(!(EUSCI_A0->IFG & BIT1));  //While it hasn't finished transmitting
-#endif
     EUSCI_A0->TXBUF = data;
 }
 
@@ -106,7 +107,10 @@ void EUSCIA0_IRQHandler(){
         //Transmit Stuff
         if(isEmpty(TXBuf)){
             EUSCI_A0->IFG &= ~BIT1;
-              return;
+            ADC14->CTL0 &= ~(ADC14_CTL0_ENC);
+            ADC14->CTL0 |= ADC14_CTL0_ON ; // Disable Conversions
+            ADC14->CTL0 |= (ADC14_CTL0_ENC);
+            return;
         }
         UART_send_byte(removeItem(TXBuf));
     }
@@ -119,16 +123,23 @@ void ADC14_IRQHandler(){
         P1->DIR |= BIT0;
         //P1->OUT ^= BIT0;
         NADC = ADC14->MEM[0];
-#ifdef PROBLEM6
-        addItemCircBuf(TXBuf, ADC14->MEM[0]);
-#endif
+        uint8_t CString[7];
+
+        itoa(ADC14->MEM[0], 5, CString);
+        CString[6] = 0x0D;
+        CString[5] = 0x0A;
+        //addItemCircBuf(TXBuf, ADC14->MEM[0]);
+        loadToBuf(TXBuf,CString,5);
+
     }
 }
 void PORT1_IRQHandler(){
+#ifndef PROBLEM6
     if(P1->IFG & BIT1 || P1->IFG & BIT4){
         P1->OUT ^= BIT0;
         printTemps();
     }
+#endif
 #ifdef PROBLEM6
     if (P1->IFG & BIT1 || P1->IFG & BIT4) {
         transmit = 1;
@@ -174,7 +185,8 @@ void printTemps(){
 }
 
 void problemSix() {
-    UART_send_n(TXBuf->buffer, 60);
+    EUSCI_A0->IFG |= BIT1;
     while(!isEmpty(TXBuf));
     resetCircBuf(TXBuf);
+    P1->OUT &= ~BIT0;
 }

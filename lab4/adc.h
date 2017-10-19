@@ -19,5 +19,6 @@ void configure_clocks();
 void UART_send_n(uint8_t * data, uint8_t length);
 void UART_send_byte(uint8_t data);
 void printTemps();
+void problemSix();
 
 #endif

@@ -8,6 +8,7 @@
 
 #include "adc_circbuf.h"
 #include <stdlib.h>
+#include "msp.h"
 
 CircBuf_t * createCircBuf(uint32_t length) {
     if(length>0){
@@ -16,7 +17,7 @@ CircBuf_t * createCircBuf(uint32_t length) {
         if(!ourBuf)
             return NULL;
 
-        ourBuf->buffer = malloc(sizeof(uint8_t)*length);
+        ourBuf->buffer = malloc(sizeof(uint16_t)*length);
 
         if(!ourBuf->buffer)
             return NULL;
@@ -61,16 +62,17 @@ int8_t isFullCircBuf(CircBuf_t * buf) {
     }
 }
 
-void addItemCircBuf(CircBuf_t * buf, uint8_t item) {
+void addItemCircBuf(CircBuf_t * buf, uint16_t item) {
     if(!buf){
         return;
     }
     else if(isFullCircBuf(buf)){
-        return;
+        removeItem(buf);
+        P1->OUT |= BIT0;
     }
 
     *buf->tail = item;
-    buf->tail = (buf->tail - (volatile uint8_t *)buf->buffer + 1)%(buf->length) + (volatile uint8_t *)buf->buffer;
+    buf->tail = (buf->tail - (volatile uint16_t *)buf->buffer + 1)%(buf->length) + (volatile uint16_t *)buf->buffer;
     buf->num_items ++;
 }
 
@@ -90,7 +92,7 @@ void loadToBuf(CircBuf_t * buf, uint8_t * string, uint8_t length){
     }
     volatile uint8_t i;
     for(i = 0; i<length; i++){
-        while(isFullCircBuf(buf)==1);
+//        while(isFullCircBuf(buf)==1);
         addItemCircBuf(buf, string[i]);
     }
 
@@ -104,7 +106,7 @@ uint8_t removeItem(CircBuf_t * buf) {
         return 0xFF;
     }
     uint8_t data = *buf->head;
-    buf->head = (buf->head - (volatile uint8_t *)buf->buffer + 1)%(buf->length) + (volatile uint8_t *)buf->buffer;
+    buf->head = (buf->head - (volatile uint16_t *)buf->buffer + 1)%(buf->length) + (volatile uint16_t *)buf->buffer;
     buf->num_items --;
 
     return data;
