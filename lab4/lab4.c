@@ -73,3 +73,30 @@ void ftoa(float number, uint8_t decimalPlace, uint8_t size, uint8_t * str) {
         j++;
     }
 }
+
+void TA0_0_IRQHandler() {
+
+    /*the timer cannot count up to 500ms, we need to count to a multiple of 500
+     * many times. This interrupt goes off every 166ms, so we need three counts before
+     * taking action.
+     */
+
+    timerCount++;
+    if (timerCount == 40) {
+        P1->OUT ^= BIT0;
+        timerCount = 0;
+    }
+    TIMER_A0->R = 0;
+        //TIMER_A0->CTL &= ~0;//(BIT0);
+    TIMER_A0->CCTL[0] &= ~(BIT0);
+    TIMER_A0->CTL |=  (BIT1);
+}
+
+void timer_a0_config(){
+    TIMER_A0->R = 0;                    // Clear timer count
+    TIMER_A0->CTL = SET_CTL;            // Set to SMCLK, Up mode (BIT9 ON;)
+    TIMER_A0->CCR[0] = COUNT_TO;        // Value to count to
+    TIMER_A0->CCTL[0] |= SET_CCTL;      // TACCR0 interrupt enabled
+
+    NVIC_EnableIRQ(TA0_0_IRQn);
+}
