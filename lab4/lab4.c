@@ -8,6 +8,7 @@
 
 #include "msp.h"
 #include "lab4.h"
+uint8_t timerCount = 0;
 
 
 void itoa(uint32_t num, int8_t size, uint8_t * str ) {
@@ -82,12 +83,17 @@ void TA0_0_IRQHandler() {
      */
 
     timerCount++;
-    if (timerCount == 40) {
-        P1->OUT ^= BIT0;
+    if (timerCount == 1) {//use 40 to get one second
+        //P1->OUT ^= BIT0;
         timerCount = 0;
+
+        if(ADC14->CTL0 & (ADC14_CTL0_ENC))
+            ADC14->CTL0 |= ADC14_CTL0_SC; //Sampling and conversion start
+       // __sleep();          //blocks here until conversion finishes
+
     }
-    TIMER_A0->R = 0;
-        //TIMER_A0->CTL &= ~0;//(BIT0);
+    //TIMER_A0->R = 0;
+    //TIMER_A0->CTL &= ~0;//(BIT0);
     TIMER_A0->CCTL[0] &= ~(BIT0);
     TIMER_A0->CTL |=  (BIT1);
 }

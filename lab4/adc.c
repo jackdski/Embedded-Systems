@@ -9,12 +9,20 @@
 #include "adc.h"
 #include "lab4.h"
 
-#define PROBLEM6
+#define TEMP
 
 
 extern CircBuf_t * TXBuf;
-extern uint16_t NADC;
+extern CircBuf_t * SENDBuf;
+extern uint16_t TNADC;
+extern uint16_t XNADC;
+extern uint16_t YNADC;
 extern uint8_t transmit;
+extern uint8_t newTemp;
+extern uint16_t VXNADC;
+extern uint16_t VYNADC;
+extern uint16_t VZNADC;
+
 
 void configure_ADC() {
     // Initialize the shared reference module
@@ -25,14 +33,34 @@ void configure_ADC() {
 
     // Configure ADC - Pulse sample mode; ADC14SC trigger
     // ADC ON, temperature sample period > 30us
-    ADC14->CTL0 |= ADC14_CTL0_SHT0_5 | ADC14_CTL0_ON | ADC14_CTL0_SHP;
     ADC14->CTL0 &= ~ADC14_CTL0_ENC;
+    //Add sequence of channels
+    ADC14->CTL0 |= ADC14_CTL0_SHT0_5 | ADC14_CTL0_ON | ADC14_CTL0_SHP | ADC14_CTL0_CONSEQ_1;
     //conf internal temp sensor channel, set resolution to 14
     ADC14->CTL1 = (ADC14_CTL1_TCMAP | ADC14_CTL1_RES_3);
 
     // Map temp analog channel to MEM0/MCTL0, set 3.3v ref
-    ADC14->MCTL[0] = (ADC14_MCTLN_INCH_22 | ADC14_MCTLN_VRSEL0);
+    ADC14->MCTL[0] = (ADC14_MCTLN_INCH_22 | ADC14_MCTLN_VRSEL_1);
     ADC14->IER0 |= ADC14_IER0_IE0; //Enable MCTL0/MEM0(BIT0) Interrupts
+
+    //Joystick Configuration
+    P4->SEL0 |=  BIT4;
+    P4->SEL1 |=  BIT4;
+    P6->SEL0 |=  BIT0;
+    P6->SEL1 |=  BIT0;
+    ADC14->MCTL[1] = (ADC14_MCTLN_INCH_15 | ADC14_MCTLN_VRSEL_0);
+    ADC14->MCTL[2] = (ADC14_MCTLN_INCH_9  | ADC14_MCTLN_VRSEL_0);
+
+    //Accelerometer Configuration
+    P4->SEL0 |= (BIT0 | BIT2);
+    P4->SEL1 |= (BIT0 | BIT2);
+    P6->SEL0 |=  BIT1;
+    P6->SEL1 |=  BIT1;
+    ADC14->MCTL[3] = (ADC14_MCTLN_INCH_14 | ADC14_MCTLN_VRSEL_0 );
+    ADC14->MCTL[4] = (ADC14_MCTLN_INCH_13 | ADC14_MCTLN_VRSEL_0 );
+    ADC14->MCTL[5] = (ADC14_MCTLN_INCH_11 | ADC14_MCTLN_VRSEL_0 | ADC14_MCTLN_EOS);
+
+
 
     while(!(REF_A->CTL0 & REF_A_CTL0_GENRDY)); // Wait for ref generator to settle
     ADC14->CTL0 |= ADC14_CTL0_ENC; // Enable Conversions
@@ -105,14 +133,12 @@ void UART_send_byte(uint8_t data){
 void EUSCIA0_IRQHandler(){
     if (EUSCI_A0->IFG & BIT1){
         //Transmit Stuff
-        if(isEmpty(TXBuf)){
+        if(isEmpty(SENDBuf)){
             EUSCI_A0->IFG &= ~BIT1;
-            ADC14->CTL0 &= ~(ADC14_CTL0_ENC);
-            ADC14->CTL0 |= ADC14_CTL0_ON ; // Disable Conversions
             ADC14->CTL0 |= (ADC14_CTL0_ENC);
             return;
         }
-        UART_send_byte(removeItem(TXBuf));
+        UART_send_byte(removeItem(SENDBuf));
     }
 
 }
@@ -120,27 +146,34 @@ void EUSCIA0_IRQHandler(){
 void ADC14_IRQHandler(){
 
     if(ADC14_IFGR0_IFG0){
-        P1->DIR |= BIT0;
-        //P1->OUT ^= BIT0;
-        NADC = ADC14->MEM[0];
-        uint8_t CString[7];
-
-        itoa(ADC14->MEM[0], 5, CString);
-        CString[6] = 0x0D;
-        CString[5] = 0x0A;
-        //addItemCircBuf(TXBuf, ADC14->MEM[0]);
-        loadToBuf(TXBuf,CString,5);
-
+        TNADC = ADC14->MEM[0];
+        newTemp = 1;
     }
+    if(ADC14_IFGR0_IFG1){
+        YNADC = ADC14->MEM[1];
+       }
+    if(ADC14_IFGR0_IFG2){
+        XNADC = ADC14->MEM[2];
+    }
+    if(ADC14_IFGR0_IFG3){
+        VXNADC = ADC14->MEM[3];
+    }
+    if(ADC14_IFGR0_IFG4){
+        VYNADC = ADC14->MEM[4];
+    }
+    if(ADC14_IFGR0_IFG5){
+        VZNADC = ADC14->MEM[5];
+    }
+
 }
 void PORT1_IRQHandler(){
-#ifndef PROBLEM6
+#ifndef TEMP
     if(P1->IFG & BIT1 || P1->IFG & BIT4){
         P1->OUT ^= BIT0;
         printTemps();
     }
 #endif
-#ifdef PROBLEM6
+#ifdef TEMP
     if (P1->IFG & BIT1 || P1->IFG & BIT4) {
         transmit = 1;
     }
@@ -156,7 +189,7 @@ void printTemps(){
 
     uint8_t FString[9];
 
-    Ctemp = (0.0381)*(float)(NADC)-360.5;
+    Ctemp = (0.0381)*(float)(TNADC)-360.5;
     ftoa(Ctemp,2,5,CString);
     CString[6] = 0x0D;
     CString[5] = 0x0A;
@@ -171,22 +204,48 @@ void printTemps(){
     FString[8] = 0x0D;
     FString[7] = 0x0A;
 
-    loadToBuf(TXBuf,"Temps in C, K and F",19);
-    addItemCircBuf(TXBuf, 0x0A);
-    addItemCircBuf(TXBuf, 0x0D);
+    loadToBuf(SENDBuf,"Temps in C, K and F",19);
+    addItemCircBuf(SENDBuf, 0x0A);
+    addItemCircBuf(SENDBuf, 0x0D);
 
-    loadToBuf(TXBuf,CString,7);
-    loadToBuf(TXBuf,KString,9);
-    loadToBuf(TXBuf,FString,9);
+    loadToBuf(SENDBuf,CString,7);
+    loadToBuf(SENDBuf,KString,9);
+    loadToBuf(SENDBuf,FString,9);
 
-    if(!isEmpty(TXBuf)){
+    if(!isEmpty(SENDBuf)){
         EUSCI_A0->IFG |= BIT1;
     }
 }
 
 void problemSix() {
+    while(!isEmpty(TXBuf)){
+        float Ftemp = (0.0381)*(float)(removeItem(TXBuf))-360.5;
+        uint8_t FString[6];
+        ftoa((Ftemp+273),2,5,FString);
+        FString[5] = 0x0D;
+        loadToBuf(SENDBuf,FString,6);
+    }
+
+    loadToBuf(SENDBuf,"The joystick is in the ",23);
+
+    if(XNADC > 9000){
+        loadToBuf(SENDBuf,"upper ",6);
+    }
+    else{
+        loadToBuf(SENDBuf,"lower ",6);
+    }
+    if(YNADC > 9000){
+        loadToBuf(SENDBuf,"right ",6);
+    }
+    else{
+        loadToBuf(SENDBuf,"left ",5);
+    }
+    loadToBuf(SENDBuf,"quadrant.",10);
+    addItemCircBuf(SENDBuf, 0x0D);
+
+
     EUSCI_A0->IFG |= BIT1;
-    while(!isEmpty(TXBuf));
+    while(!isEmpty(SENDBuf));
     resetCircBuf(TXBuf);
     P1->OUT &= ~BIT0;
 }
