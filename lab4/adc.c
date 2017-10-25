@@ -50,6 +50,7 @@ void configure_ADC() {
     P6->SEL1 |=  BIT0;
     ADC14->MCTL[1] = (ADC14_MCTLN_INCH_15 | ADC14_MCTLN_VRSEL_0);
     ADC14->MCTL[2] = (ADC14_MCTLN_INCH_9  | ADC14_MCTLN_VRSEL_0);
+    ADC14->IER0 |= ADC14_IER0_IE1 | ADC14_IER0_IE2; //Enable MCTL0/MEM0(BIT0) Interrupts
 
     //Accelerometer Configuration
     P4->SEL0 |= (BIT0 | BIT2);
@@ -59,7 +60,7 @@ void configure_ADC() {
     ADC14->MCTL[3] = (ADC14_MCTLN_INCH_14 | ADC14_MCTLN_VRSEL_0 );
     ADC14->MCTL[4] = (ADC14_MCTLN_INCH_13 | ADC14_MCTLN_VRSEL_0 );
     ADC14->MCTL[5] = (ADC14_MCTLN_INCH_11 | ADC14_MCTLN_VRSEL_0 | ADC14_MCTLN_EOS);
-
+    ADC14->IER0 |= ADC14_IER0_IE3 | ADC14_IER0_IE4 | ADC14_IER0_IE5; //Enable
 
 
     while(!(REF_A->CTL0 & REF_A_CTL0_GENRDY)); // Wait for ref generator to settle

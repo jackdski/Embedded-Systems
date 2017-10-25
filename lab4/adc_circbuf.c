@@ -68,7 +68,7 @@ void addItemCircBuf(CircBuf_t * buf, uint16_t item) {
     }
     else if(isFullCircBuf(buf)){
         removeItem(buf);
-        P1->OUT |= BIT0;
+       // P1->OUT |= BIT0;
     }
 
     *buf->tail = item;

@@ -8,7 +8,14 @@
 
 #include "msp.h"
 #include "lab4.h"
+#include "adc_circbuf.h"
+#include <stdlib.h>
 uint8_t timerCount = 0;
+es_V * myScooter;
+uint8_t lastV;
+extern CircBuf_t * SENDBuf;
+extern uint16_t VYNADC;
+extern uint8_t  dir;
 
 
 void itoa(uint32_t num, int8_t size, uint8_t * str ) {
@@ -27,21 +34,6 @@ void itoa(uint32_t num, int8_t size, uint8_t * str ) {
         }
     }
 }
-
-
-// Converts a string of numbers into an integer
-uint32_t atoi(uint8_t * a) {
-    uint8_t count = 0;
-    uint8_t finalInt = 0;
-
-    while (a[count]){
-        finalInt *= 10;
-        finalInt += a[count] - '0';
-    }
-
-    return finalInt;
-}
-
 
 void ftoa(float number, uint8_t decimalPlace, uint8_t size, uint8_t * str) {
     uint8_t tens = 10;
@@ -82,18 +74,31 @@ void TA0_0_IRQHandler() {
      * taking action.
      */
 
+    if(ADC14->CTL0 & (ADC14_CTL0_ENC))
+        ADC14->CTL0 |= ADC14_CTL0_SC; //Sampling and conversion start
+
     timerCount++;
-    if (timerCount == 1) {//use 40 to get one second
-        //P1->OUT ^= BIT0;
+    if (timerCount == 4) {//use 40 to get one second
+        P1->OUT ^= BIT0;
         timerCount = 0;
 
-        if(ADC14->CTL0 & (ADC14_CTL0_ENC))
-            ADC14->CTL0 |= ADC14_CTL0_SC; //Sampling and conversion start
-       // __sleep();          //blocks here until conversion finishes
+        lastV = myScooter->instantVelocity;
+        myScooter->timesTimed++;
+        myScooter->averageVelocity   =  (myScooter->distanceTraveled)/(0.1*(myScooter->timesTimed));
+        myScooter->instantVelocity   =  ((myScooter->bBSinceLast)*(myScooter->distancePerBreak))/(0.1);
+        myScooter->instantRotVel     =  ((myScooter->bBSinceLast)/((14*0.1)));
+        myScooter->bBSinceLast = 0;
 
+        if(lastV< 10 && myScooter->instantVelocity > 10){
+            if(VYNADC < 8200)
+                //loadToBuf(SENDBuf,"Forward",7);
+                dir = 0;
+            else
+                //loadToBuf(SENDBuf,"Forward",7);
+                dir = 1;
+            EUSCI_A0->IFG |= BIT1;
+        }
     }
-    //TIMER_A0->R = 0;
-    //TIMER_A0->CTL &= ~0;//(BIT0);
     TIMER_A0->CCTL[0] &= ~(BIT0);
     TIMER_A0->CTL |=  (BIT1);
 }
@@ -105,4 +110,51 @@ void timer_a0_config(){
     TIMER_A0->CCTL[0] |= SET_CCTL;      // TACCR0 interrupt enabled
 
     NVIC_EnableIRQ(TA0_0_IRQn);
+}
+
+es_V * make_eScoot(){
+    es_V * eScoot = (es_V *)malloc(sizeof(es_V));
+
+    eScoot->distancePerBreak    = 0.9107;
+    eScoot->beamBreaks          = 0;
+    eScoot->bBSinceLast         = 0;
+    eScoot->distanceTraveled    = 0;
+    eScoot->timesTimed          = 0;
+    eScoot->averageVelocity     = 0;
+    eScoot->instantVelocity     = 0;
+
+    return eScoot;
+}
+
+void configure_eScooter(){
+    //SysTick->LOAD = 1210000;   // Give SysTick a starting value to count down from
+    //SysTick->CTRL = BIT0 | BIT1 | BIT2;  // Enable SysTick
+
+    //data from encoder (port 3.2)
+      P3->SEL0 &= ~(BIT2);      // set to General IO Mode
+      P3->SEL1 &= ~(BIT2);      // Make sure not to be in tertiary function
+      P3->DIR &= ~(BIT2);       // set direction to input
+      P3->REN |= BIT2;          // enable pullup
+      P3->OUT |= BIT2;          // clear interrupts
+      P3->IES = BIT2;           // set IFT flag to high to low transition
+
+      P3->IFG = 0;
+      P3->IE =  (BIT2);       // Enable port interrupt
+      /* Enable Interrupts in the NVIC */
+      P2->DIR |= BIT0;
+
+      myScooter = make_eScoot();
+
+      NVIC_EnableIRQ(PORT3_IRQn);
+}
+
+void PORT3_IRQHandler(){
+
+    if (P3->IFG & BIT2) {
+        myScooter->beamBreaks++;
+        myScooter->bBSinceLast++;
+        myScooter->distanceTraveled = (myScooter->beamBreaks)*(myScooter->distancePerBreak);
+        P1->OUT ^= BIT0;
+    }
+    P3->IFG = 0;
 }

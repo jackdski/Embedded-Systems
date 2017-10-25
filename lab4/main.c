@@ -13,6 +13,7 @@ volatile uint16_t XNADC = 0;
 volatile uint16_t VXNADC = 0;
 volatile uint16_t VYNADC = 0;
 volatile uint16_t VZNADC = 0;
+volatile uint8_t  dir=0;
 
 /**
  * main.c
@@ -31,6 +32,7 @@ void main(void)
     configure_serial_port();
     configure_clocks();
     configure_ADC();
+    configure_eScooter();
 
     timer_a0_config();
     __enable_interrupt();
@@ -51,6 +53,12 @@ void main(void)
             addItemCircBuf(TXBuf, TNADC);
         }
 #endif
+        if (VYNADC > 10000 || VYNADC < 6000){
+            P2->OUT |= BIT0;
+        }
+        else{
+            P2->OUT &= ~BIT0;
+        }
     }
 
 }
