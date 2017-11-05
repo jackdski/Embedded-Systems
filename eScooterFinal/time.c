@@ -7,6 +7,7 @@
 #include "time.h"
 #include "msp.h"
 
+extern uint8_t measure;
 extern uint8_t transmit;
 
 void configure_Systick(){
@@ -18,7 +19,12 @@ void configure_Systick(){
 }
 
 void SysTick_Handler (){
-    transmit = 1;
+    if(!transmit){
+        measure = 1;
+        if(ADC14->CTL0 & (ADC14_CTL0_ENC)){
+            ADC14->CTL0 |= ADC14_CTL0_SC; //Sampling and conversion star
+        }
+    }
 }
 
 //This function sets the DCO clock to run at 12MHz and sources it to many clocks

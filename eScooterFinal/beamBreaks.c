@@ -27,7 +27,7 @@ void PORT3_IRQHandler(){
 
     if (P3->IFG & BIT2) {
         beamBreaks++;
-        P1->OUT ^= BIT0;
+        //P1->OUT ^= BIT0;
     }
     P3->IFG = 0;
 }

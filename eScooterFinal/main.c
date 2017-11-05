@@ -6,18 +6,22 @@
 #include "accelerometer.h"
 #include "time.h"
 #include "beamBreaks.h"
+#include "bluetooth.h"
+#include "calculations.h"
 
-uint8_t beamBreaks = 0;
-uint16_t VXNADC = 0;
-uint16_t VYNADC = 0;
-uint16_t VZNADC = 0;
+volatile uint8_t beamBreaks = 0;
+volatile uint16_t VYNADC = 0;
 //uint16_t accelNADC = 0;
 
-uint16_t tempNADC = 0;
-uint16_t lightNADC = 0;
+volatile uint16_t tempNADC = 0;
+volatile uint16_t lightNADC = 0;
 
+volatile float totalDistance = 0;
+volatile uint8_t direction = 0;
+volatile float spd = 0;
+//volatile float speed = 0;
 
-
+uint8_t measure = 0;
 uint8_t transmit = 0;
 
 CircBuf_t * TXBuf;
@@ -32,13 +36,55 @@ void main(void)
 	if(!TXBuf)
 	    return;
 
-	configure_Systick();
+    configure_ADC();
 	configure_clocks();
-	configure_ADC();
 	configure_UART();
 	configure_beamBreaks();
+	configure_Systick();
+
+	configure_BLUE_UART();
+	__enable_irq();
+
+	P1->DIR |= BIT0;
+	EUSCI_A3->TXBUF = 'a';
+
+	P2->DIR |= BIT0 | BIT1;
 
 	while(1){
+	    if(measure){
+	        measure = 0;
+	        //P1->OUT ^= BIT0;
+	        //Update distance and calculate speed
+	        spd = speed();
+	        direction = calculateDirection(spd);
+	    }
+
+	    if(transmit){
+	        NVIC_DisableIRQ(PORT1_IRQn);
+	        NVIC_DisableIRQ(ADC14_IRQn); // Enable ADC interrupt in NVIC module
+	        NVIC_DisableIRQ(PORT3_IRQn);
+            SEND_DATA(totalDistance,spd,direction);
+            transmit = 0;
+	    }
+
+	    if(VYNADC > 9000){
+	        P2->OUT &= ~(BIT1);
+	        P2->OUT |=   BIT0;
+	    }
+	    else if(VYNADC < 7000){
+	        P2->OUT &= ~(BIT0);
+	        P2->OUT |=   BIT1;
+	    }
+	    else{
+	        P2->OUT &= ~(BIT0 | BIT1);
+	    }
+
+
+	   /* if(beamBreaks == 10){
+	        BLUART_send_byte('A');
+	        UART_send_byte('A');
+	        beamBreaks = 0;
+	    }*/
 
 	}
 }

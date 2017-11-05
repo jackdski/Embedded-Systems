@@ -8,7 +8,7 @@
 #ifndef TIME_H_
 #define TIME_H_
 
-#define SYSTICK_COUNT   1210000
+#define SYSTICK_COUNT   1210500
 
 void configure_Systick();
 void configure_clocks();
