@@ -53,8 +53,8 @@ void SEND_DATA(float totalDistance, float spd,uint8_t direction){
     uint8_t distanceS[7];
     uint8_t speedS[7];
 
-    ftoa(totalDistance,2,7,distanceS);
-    ftoa(spd,2,7,speedS);
+    //ftoa(totalDistance,2,7,distanceS);
+    //ftoa(spd,2,7,speedS);
 
     loadToBuf(TXBuf, "You have traveled ", 18);
     loadToBuf(TXBuf, distanceS, 7);

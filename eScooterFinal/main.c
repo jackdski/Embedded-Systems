@@ -10,7 +10,7 @@
 #include "calculations.h"
 #include "port.h"
 
-volatile uint8_t beamBreaks = 0;
+volatile uint32_t beamBreaks = 0;
 volatile uint16_t VYNADC = 0;
 //uint16_t accelNADC = 0;
 
@@ -73,7 +73,7 @@ void main(void)
 	        P2->OUT &= ~(BIT1);
 	        P2->OUT |=   BIT0;
 	    }
-	    else if(VYNADC < 7800){
+	    else if(VYNADC < 8200){
 	        P2->OUT &= ~(BIT0);
 	        P2->OUT |=   BIT1;
 	    }

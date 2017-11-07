@@ -6,7 +6,7 @@
  */
 #include "calculations.h"
 
-extern uint8_t beamBreaks;
+extern uint32_t beamBreaks;
 extern uint16_t VXNADC;
 extern uint16_t VYNADC;
 extern uint16_t VZNADC;
@@ -16,8 +16,8 @@ extern volatile uint8_t direction;
 uint8_t lastSpeed = 0;
 
 float speed(){
-    float spd = 02.3114 * beamBreaks / 0.1;
-    totalDistance += beamBreaks*02.3114;
+    float spd = 02.25114 * beamBreaks / 0.1;
+    totalDistance += beamBreaks*02.25114;
     beamBreaks = 0;
     return spd;
 }

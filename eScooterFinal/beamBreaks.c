@@ -6,7 +6,7 @@
  */
 #include "beamBreaks.h"
 
-extern uint8_t beamBreaks;
+extern uint32_t beamBreaks;
 extern uint8_t transmit;
 
 void configure_beamBreaks(){
