@@ -8,6 +8,7 @@
 #include "beamBreaks.h"
 #include "bluetooth.h"
 #include "calculations.h"
+#include "port.h"
 
 volatile uint8_t beamBreaks = 0;
 volatile uint16_t VYNADC = 0;
@@ -30,7 +31,7 @@ CircBuf_t * TXBuf;
  */
 void main(void)
 {
-	WDT_A->CTL = WDT_A_CTL_PW | WDT_A_CTL_HOLD;		// stop watchdog timer
+    WDT_A->CTL = WDT_A_CTL_PW | WDT_A_CTL_HOLD;		// stop watchdog timer
 
 	TXBuf = createCircBuf(100);
 	if(!TXBuf)
@@ -41,12 +42,12 @@ void main(void)
 	configure_UART();
 	configure_beamBreaks();
 	configure_Systick();
+	configure_ports();
 
 	configure_BLUE_UART();
 	__enable_irq();
 
 	P1->DIR |= BIT0;
-	EUSCI_A3->TXBUF = 'a';
 
 	P2->DIR |= BIT0 | BIT1;
 
@@ -67,11 +68,11 @@ void main(void)
             transmit = 0;
 	    }
 
-	    if(VYNADC > 9000){
+	    if(VYNADC > 9800){
 	        P2->OUT &= ~(BIT1);
 	        P2->OUT |=   BIT0;
 	    }
-	    else if(VYNADC < 7000){
+	    else if(VYNADC < 7800){
 	        P2->OUT &= ~(BIT0);
 	        P2->OUT |=   BIT1;
 	    }
@@ -79,12 +80,17 @@ void main(void)
 	        P2->OUT &= ~(BIT0 | BIT1);
 	    }
 
-
 	   /* if(beamBreaks == 10){
 	        BLUART_send_byte('A');
 	        UART_send_byte('A');
 	        beamBreaks = 0;
 	    }*/
+	    if(direction){
+	        P1->OUT |=  BIT0;
+	    }
+	    else{
+	        P1->OUT &= ~BIT0;
+	    }
 
 	}
 }

@@ -25,10 +25,12 @@ void configure_ADC() {
     ADC14->CTL0 |= ADC14_CTL0_SHT0_5 | ADC14_CTL0_ON | ADC14_CTL0_SHP
                     | ADC14_CTL0_CONSEQ_0 | ADC14_CTL0_SSEL__SMCLK;
     ADC14->CTL1 = (ADC14_CTL1_RES_3);
+
+
     //Accelerometer Configuration
-    P4->SEL0 |= (BIT0);
-    P4->SEL1 |= (BIT0);
-    ADC14->MCTL[0] = (ADC14_MCTLN_INCH_13 | ADC14_MCTLN_VRSEL_0  | ADC14_MCTLN_EOS);
+    P6->SEL0 |=  BIT1;
+    P6->SEL1 |=  BIT1;
+    ADC14->MCTL[0] = (ADC14_MCTLN_INCH_11 | ADC14_MCTLN_VRSEL_0);
 
     //Enable MCTL0/MEM0(BIT0) Interrupts
     ADC14->IER0 |= ADC14_IER0_IE0 ;//| ADC14_IER0_IE1 | ADC14_IER0_IE2;
@@ -37,7 +39,6 @@ void configure_ADC() {
     ADC14->CTL0 |= ADC14_CTL0_ENC; // Enable Conversions
 
     NVIC_EnableIRQ(ADC14_IRQn); // Enable ADC interrupt in NVIC module
-    //ADC14->CTL0 |= ADC14_CTL0_ENC|ADC14_CTL0_SC;
 }
 
 // Stores accelerometer data in MEM[3-5]

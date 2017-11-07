@@ -23,13 +23,15 @@ float speed(){
 }
 
 uint8_t calculateDirection(float spd){
-    if(lastSpeed > 0.5 || spd  < 0.5){
+    if(lastSpeed > 0 || spd  == 0){
         lastSpeed = spd;
         return direction;
     }
-    if(VYNADC > 8200){
+    if(VYNADC > 8850){
+        lastSpeed = spd;
         return 0;
     }
+    lastSpeed = spd;
     return 1;
 
 }

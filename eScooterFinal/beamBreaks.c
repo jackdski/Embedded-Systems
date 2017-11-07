@@ -7,6 +7,7 @@
 #include "beamBreaks.h"
 
 extern uint8_t beamBreaks;
+extern uint8_t transmit;
 
 void configure_beamBreaks(){
     //data from encoder (port 3.2)
@@ -15,10 +16,10 @@ void configure_beamBreaks(){
          P3->DIR &= ~(BIT2);       // set direction to input
          P3->REN |= BIT2;          // enable pullup
          P3->OUT |= BIT2;          // clear interrupts
-         P3->IES = BIT2;           // set IFT flag to high to low transition
+         P3->IES |= BIT2;           // set IFT flag to high to low transition
 
          P3->IFG = 0;
-         P3->IE =  (BIT2);       // Enable port interrupt
+         P3->IE  |=  (BIT2);       // Enable port interrupt
 
          NVIC_EnableIRQ(PORT3_IRQn);
 }
@@ -28,6 +29,10 @@ void PORT3_IRQHandler(){
     if (P3->IFG & BIT2) {
         beamBreaks++;
         //P1->OUT ^= BIT0;
+    }
+
+    if(P3->IFG & (BIT5)){
+        transmit = 1;
     }
     P3->IFG = 0;
 }
