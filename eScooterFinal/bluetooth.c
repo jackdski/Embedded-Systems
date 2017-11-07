@@ -6,6 +6,8 @@
  */
 #include "bluetooth.h"
 #include "circbuf.h"
+#include "conversions.h"
+#include <stdint.h>
 
 extern CircBuf_t * TXBuf;
 

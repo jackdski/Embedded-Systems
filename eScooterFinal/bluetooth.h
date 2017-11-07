@@ -12,5 +12,6 @@
 void configure_BLUE_UART();
 void BLUART_send_byte(uint8_t data);
 
+void BLUEART_SEND_DATA(float totalDistance, float spd,uint8_t direction);
 
 #endif /* BLUETOOTH_H_ */
