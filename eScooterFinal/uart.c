@@ -58,7 +58,7 @@ void SEND_DATA(float totalDistance, float spd,uint8_t direction){
 
     loadToBuf(TXBuf, "You have traveled ", 18);
     loadToBuf(TXBuf, distanceS, 7);
-    loadToBuf(TXBuf, "cm", 2);
+    loadToBuf(TXBuf, "cm", 4);
     addItemCircBuf(TXBuf, 0x0D);
 
     loadToBuf(TXBuf, "Your speed is ", 14);

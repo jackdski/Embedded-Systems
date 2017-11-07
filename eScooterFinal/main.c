@@ -64,7 +64,8 @@ void main(void)
 	        NVIC_DisableIRQ(PORT1_IRQn);
 	        NVIC_DisableIRQ(ADC14_IRQn); // Enable ADC interrupt in NVIC module
 	        NVIC_DisableIRQ(PORT3_IRQn);
-            SEND_DATA(totalDistance,spd,direction);
+            //SEND_DATA(totalDistance,spd,direction);
+            BLUEART_SEND_DATA(totalDistance,spd,direction);
             transmit = 0;
 	    }
 
