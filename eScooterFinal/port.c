@@ -7,6 +7,7 @@
 #include "port.h"
 extern uint8_t transmit;
 
+//Configure the buttons on the MSP Breakout and the Boosterpack
 void configure_ports(){
     //Configure the BaseBoard's buttons so they can control transmission
     P1->SEL0 &= ~(BIT1 | BIT4);      // Set Port Pin Selection to General IO Mode
@@ -43,6 +44,7 @@ void configure_ports(){
     P3->IE |= BIT5;
 }
 
+//If either button is pressed on the breakout board, transmit.
 void PORT1_IRQHandler(){
     if(P1->IFG & (BIT1 | BIT4)){
         transmit = 1;
@@ -50,6 +52,8 @@ void PORT1_IRQHandler(){
     P1->IFG = 0;
 }
 
+//If the button on the boosterpack is pressed transmit. Note the PORT3 Handler is in
+//beambreaks.c
 void PORT5_IRQHandler(){
     if(P5->IFG & (BIT1)){
         transmit = 1;
