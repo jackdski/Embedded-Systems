@@ -12,6 +12,7 @@
 
 extern uint16_t VYNADC;
 
+//Configuration of the ADC channel
 void configure_ADC() {
     // Initialize the shared reference module
     // By default, REFMSTR=1 = REFCTL is used to configure the internal reference
@@ -41,7 +42,7 @@ void configure_ADC() {
     NVIC_EnableIRQ(ADC14_IRQn); // Enable ADC interrupt in NVIC module
 }
 
-// Stores accelerometer data in MEM[3-5]
+// Pulls the acceleration value and stores it in our global variable
 void ADC14_IRQHandler() {
     if(ADC14_IFGR0_IFG0){
          VYNADC = ADC14->MEM[0];
