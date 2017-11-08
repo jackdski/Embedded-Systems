@@ -12,6 +12,7 @@
 
 extern CircBuf_t * TXBuf;
 
+//Create a circular buffer
 CircBuf_t * createCircBuf(uint32_t length) {
     if(length>0){
         CircBuf_t * ourBuf = malloc(sizeof(CircBuf_t));
@@ -31,6 +32,7 @@ CircBuf_t * createCircBuf(uint32_t length) {
     return NULL;
 }
 
+//Delete a cirbuf
 void deleteCircBuf(CircBuf_t * buf) {
     if(buf){
         free(buf->buffer);
@@ -38,6 +40,7 @@ void deleteCircBuf(CircBuf_t * buf) {
     }
 }
 
+//reset the pointers and set all of the buf's values to zero
 void resetCircBuf(CircBuf_t * buf){
     if(!buf){
         return;
@@ -64,6 +67,7 @@ int16_t isFullCircBuf(CircBuf_t * buf) {
     }
 }
 
+//Add the individual item to the buffer.
 void addItemCircBuf(CircBuf_t * buf, uint16_t item) {
     if(!buf){
         return;
@@ -78,6 +82,7 @@ void addItemCircBuf(CircBuf_t * buf, uint16_t item) {
     buf->num_items ++;
 }
 
+//Return 1 if the buffer has no items.
 uint16_t isEmpty(CircBuf_t * buf){
     if(!buf){
         return 1;
@@ -88,6 +93,7 @@ uint16_t isEmpty(CircBuf_t * buf){
     return 0;
 }
 
+//Load a string of information to the buffer
 void loadToBuf(CircBuf_t * buf, uint8_t * string, uint16_t length){
     if(!buf || !string ){
         return;
@@ -100,6 +106,7 @@ void loadToBuf(CircBuf_t * buf, uint8_t * string, uint16_t length){
 
 }
 
+//Pop an item from the buffer
 uint16_t removeItem(CircBuf_t * buf) {
     if(!buf){
         return 0xFF;
