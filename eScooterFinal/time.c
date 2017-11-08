@@ -10,6 +10,7 @@
 extern uint8_t measure;
 extern uint8_t transmit;
 
+//Configure the Systick timer to fire an interrupt every .1 seconds
 void configure_Systick(){
     //Give SysTick a starting value that correlates to .1 seconds
     SysTick->LOAD = SYSTICK_COUNT;
@@ -18,6 +19,8 @@ void configure_Systick(){
     SysTick->CTRL = BIT0 | BIT1 | BIT2;
 }
 
+//In order to disable the systick handler, we need to poll for the transmit flag
+//Otherwise make a measurement back in main, and begin an ADC conversion
 void SysTick_Handler (){
     if(!transmit){
         measure = 1;
