@@ -12,6 +12,7 @@
 extern CircBuf_t * TXBuf;
 extern uint8_t transmit;
 
+//Configure the regular UART serial terminal. 
 void configure_UART(){
     //Configure UART pins, set 2-UART pins to UART mode
     P1->SEL0 |=  (BIT2 | BIT3);
@@ -28,10 +29,13 @@ void configure_UART(){
     NVIC_EnableIRQ(EUSCIA0_IRQn);
 }
 
+//Send one byte of data
 void UART_send_byte(uint8_t data){
     EUSCI_A0->TXBUF = data;
 }
 
+//If I recieve data, throw it away, and toggle the 1.0 LED.  When transmitting continue sending
+//until our buffer is empty.
 void EUSCIA0_IRQHandler(){
     if (EUSCI_A0->IFG & BIT0){
         uint8_t data = EUSCI_A0->RXBUF;
@@ -49,6 +53,7 @@ void EUSCIA0_IRQHandler(){
 
 }
 
+//Send all of our data we calculate.
 void SEND_DATA(float totalDistance, float spd,uint8_t direction){
     uint8_t distanceS[7];
     uint8_t speedS[7];
