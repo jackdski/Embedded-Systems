@@ -9,6 +9,7 @@
 extern uint32_t beamBreaks;
 extern uint8_t transmit;
 
+//Configure pin 3.2 to measure the beam breaks of the wheel
 void configure_beamBreaks(){
     //data from encoder (port 3.2)
          P3->SEL0 &= ~(BIT2);      // set to General IO Mode
@@ -24,11 +25,11 @@ void configure_beamBreaks(){
          NVIC_EnableIRQ(PORT3_IRQn);
 }
 
+//If 3.2 fires we saw a spoke, iterate our beambreaks counter.
+//3.5 is configured in port.c to be a transmission button.
 void PORT3_IRQHandler(){
-
     if (P3->IFG & BIT2) {
         beamBreaks++;
-        //P1->OUT ^= BIT0;
     }
 
     if(P3->IFG & (BIT5)){
