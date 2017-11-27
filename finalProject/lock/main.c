@@ -14,11 +14,11 @@
 #include "bluetooth.h"
 #include <stdint.h>
 
-uint32_t systickCounter = 0;
-uint32_t checkoutTimerTicksVal = 0;
-uint32_t overtime = 0;
-uint8_t hours = 0;
-uint8_t mins = 0;
+uint32_t systickCounter = 0;        //counts how man 0.5s have passed
+uint32_t checkoutTimerTicksVal = 0; //how many ticks the bike is being taken out for
+uint32_t overtime = 0;  // how many ticks over the above time the bike is out
+uint8_t hours = 0;      // how many hours the bike is out for
+uint8_t mins = 0;       // how many mins the bike is out for
 
 void main(void)
 {
