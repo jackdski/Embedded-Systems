@@ -1,57 +1,37 @@
 /*
-*
-* Wireless Bike Lock - Lock
-* time.c
-*
-* 11-26-17
-*
-*/
-#include "msp.h"
-
-#include <stdint.h>
-#include "time.h"
-
-extern uint32_t systickCounter = 0;
-extern uint32_t checkoutTimerTicksVal;
-extern uint32_t overtime;
-extern uint8_t hours;
-extern uint8_t mins;
-
-void startSystick() {
-    /*
-     * 500,000us == 0.5s
-     * f(t) = (t/3) *from Lab 2 write-up*
-     *  500,000 = (t/3)
-     *  t = 1,500,000
-     */
-
-    // starting value to count down from for 0.5s ticks
-    SysTick->LOAD = 1500000;
-    // Enable SysTick counter, interrupt, clock
-    SysTick->CTRL = (BIT0 | BIT1 | BIT2);
-}
-
-void SysTick_Handler() {
-    systickCounter++;
-    if(systickCounter == checkoutTimerTicksVal) {
-        // Buzzer, etc.
-    }
-    // report this back to the station to be charged for overtime?
-    if(systickCounter > counterTimerTicksVal) {
-        overtime++;
-    }
-
-}
-
-void getTimeBluetooth() {
-    return;
-}
-
-uint32_t checkoutTimerTicks(uint8_t hours, uint8_t mins) {
-    uint16_t ticks = mins;
-    uint16_t hoursToMins = hours * 60; // convert hours to minutes
-    ticks += hoursToMins; // add the hours time in minutes
-    ticks *= 60; // convert minutes to seconds
-    ticks *= 2; // measuring in 1/2 seconds
-    return ticks;
-}
+  * time.c
+  *
+  *  Created on: Oct 26, 2017
+  *      Author: amabo
+  */
+ #include "time.h"
+ #include "msp.h"
+ 
+ extern uint8_t transmit;
+ 
+ void configure_Systick(){
+     //Give SysTick a starting value that correlates to .1 seconds
+     SysTick->LOAD = SYSTICK_COUNT;
+ 
+     //Enable the Systick Counter, Enable the Interrupt, Set the Clock
+     SysTick->CTRL = BIT0 | BIT1 | BIT2;
+ }
+ 
+ void SysTick_Handler (){
+     transmit = 1;
+ }
+ 
+ //This function sets the DCO clock to run at 12MHz and sources it to many clocks
+ void configure_clocks(){
+     CS-> KEY = 0x695A; //Unlock module for register access
+     CS-> CTL0 = 0;     //Reset tuning parameters
+ 
+     //Setup DCO Clock to run at 12MHz
+     CS-> CTL0 = (BIT(23) | CS_CTL0_DCORSEL_3);
+ 
+     //Select ACLO = REFO, SMCLK MCLK = DCO
+     CS->CTL1 = CS_CTL1_SELA_2 | CS_CTL1_SELS_3 | CS_CTL1_SELM_3;
+     CS->KEY = 0;       //Lock CS module for register access.
+ 
+ }
+ 
