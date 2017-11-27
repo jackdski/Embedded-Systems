@@ -1,46 +1,57 @@
 /*
- * time.c
- *
- *  Created on: Oct 26, 2017
- *      Author: amabo
- */
-#include "time.h"
+*
+* Wireless Bike Lock - Lock
+* time.c
+*
+* 11-26-17
+*
+*/
 #include "msp.h"
 
-extern uint8_t measure;
-extern uint8_t transmit;
+#include <stdint.h>
+#include "time.h"
 
-//Configure the Systick timer to fire an interrupt every .1 seconds
-void configure_Systick(){
-    //Give SysTick a starting value that correlates to .1 seconds
-    SysTick->LOAD = SYSTICK_COUNT;
+extern uint32_t systickCounter = 0;
+extern uint32_t checkoutTimerTicksVal;
+extern uint32_t overtime;
+extern uint8_t hours;
+extern uint8_t mins;
 
-    //Enable the Systick Counter, Enable the Interrupt, Set the Clock
-    SysTick->CTRL = BIT0 | BIT1 | BIT2;
+void startSystick() {
+    /*
+     * 500,000us == 0.5s
+     * f(t) = (t/3) *from Lab 2 write-up*
+     *  500,000 = (t/3)
+     *  t = 1,500,000
+     */
+
+    // starting value to count down from for 0.5s ticks
+    SysTick->LOAD = 1500000;
+    // Enable SysTick counter, interrupt, clock
+    SysTick->CTRL = (BIT0 | BIT1 | BIT2);
 }
 
-//In order to disable the systick handler, we need to poll for the transmit flag
-//Otherwise make a measurement back in main, and begin an ADC conversion
-void SysTick_Handler (){
-    if(!transmit){
-        measure = 1;
-        if(ADC14->CTL0 & (ADC14_CTL0_ENC)){
-            ADC14->CTL0 |= ADC14_CTL0_SC; //Sampling and conversion star
-        }
+void SysTick_Handler() {
+    systickCounter++;
+    if(systickCounter == checkoutTimerTicksVal) {
+        // Buzzer, etc.
     }
-}
-
-//This function sets the DCO clock to run at 12MHz and sources it to many clocks
-void configure_clocks(){
-    CS-> KEY = 0x695A; //Unlock module for register access
-    CS-> CTL0 = 0;     //Reset tuning parameters
-
-    //Setup DCO Clock to run at 12MHz
-    CS-> CTL0 = (BIT(23) | CS_CTL0_DCORSEL_3);
-
-    //Select ACLO = REFO, SMCLK MCLK = DCO
-    CS->CTL1 = CS_CTL1_SELA_2 | CS_CTL1_SELS_3 | CS_CTL1_SELM_3;
-    CS->KEY = 0;       //Lock CS module for register access.
+    // report this back to the station to be charged for overtime?
+    if(systickCounter > counterTimerTicksVal) {
+        overtime++;
+    }
 
 }
 
+void getTimeBluetooth() {
+    return;
+}
+
+uint32_t checkoutTimerTicks(uint8_t hours, uint8_t mins) {
+    uint16_t ticks = mins;
+    uint16_t hoursToMins = hours * 60; // convert hours to minutes
+    ticks += hoursToMins; // add the hours time in minutes
+    ticks *= 60; // convert minutes to seconds
+    ticks *= 2; // measuring in 1/2 seconds
+    return ticks;
+}
