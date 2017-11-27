@@ -24,8 +24,11 @@ void startSystick() {
      *  500,000 = (t/3)
      *  t = 1,500,000
      */
-    SysTick->LOAD = 1500000; // starting value to count down from
-    SysTick->CTRL = (BIT0 | BIT1 | BIT2); // Enable SysTick
+
+    // starting value to count down from for 0.5s ticks
+    SysTick->LOAD = 1500000;
+    // Enable SysTick counter, interrupt, clock
+    SysTick->CTRL = (BIT0 | BIT1 | BIT2);
 }
 
 void SysTick_Handler() {
