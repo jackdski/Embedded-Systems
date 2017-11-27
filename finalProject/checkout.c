@@ -1,7 +1,7 @@
 /*
 *
 * Wireless Bike Lock - Lock
-* time.c
+* checkout.c
 *
 * 11-26-17
 *
@@ -9,7 +9,7 @@
 #include "msp.h"
 
 #include <stdint.h>
-#include "time.h"
+#include "checkout.h"
 
 extern uint32_t systickCounter = 0;
 extern uint32_t checkoutTimerTicksVal;
