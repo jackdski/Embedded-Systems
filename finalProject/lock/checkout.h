@@ -1,15 +1,15 @@
 /*
 *
 * Wireless Bike Lock - Lock
-* time.h
+* checkout.h
 *
 * 11-25-17
 *
 */
 #include "msp.h"
 
-#ifndef TIME_H_
-#define TIME_H_
+#ifndef CHECKOUT_H_
+#define CHECKOUT_H_
 
 // make the systick timer start counting
 void startSystick();
