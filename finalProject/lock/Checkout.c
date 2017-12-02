@@ -1,17 +1,17 @@
 /*
 *
 * Wireless Bike Lock - Lock
-* checkout.c
+* time.c
 *
 * 11-26-17
 *
 */
+#include <Checkout.h>
 #include "msp.h"
 
 #include <stdint.h>
-#include "checkout.h"
 
-extern uint32_t systickCounter = 0;
+extern uint32_t systickCounter;
 extern uint32_t checkoutTimerTicksVal;
 extern uint32_t overtime;
 extern uint8_t hours;
@@ -37,7 +37,7 @@ void SysTick_Handler() {
         // Buzzer, etc.
     }
     // report this back to the station to be charged for overtime?
-    if(systickCounter > counterTimerTicksVal) {
+    if(systickCounter > checkoutTimerTicksVal) {
         overtime++;
     }
 
