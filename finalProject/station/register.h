@@ -14,6 +14,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+/*
 typedef struct {
     uint64_t data;
     uint16_t studentId;
@@ -33,9 +34,11 @@ void deleteList(List_t * list);
 // Return 1 = Buffer is full, Return 0 = Buffer is not full
 int16_t isFullList(List_t * list);
 void addItemList(List_t * list, User_t item);
-uint16_t isEmpty(List_t * list);
+uint16_t isEmptyList(List_t * list);
 //void loadToList(List_t * list, uint8_t * string, uint16_t length);
-User_t removeItem(List_t * list);
-
+User_t removeItemList(List_t * list);
+uint16_t idAtoI(uint8_t * studentID);
+uint8_t * getStudentID();
+*/
 
 #endif
