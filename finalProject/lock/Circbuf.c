@@ -118,7 +118,7 @@ uint8_t removeItem(CircBuf_t * buf) {
     return data;
 }
 
-int16_t atoi(char * a) {
+int16_t stoi(char * a) {
     uint16_t returnArray [3];
 
     int8_t count = 0;
