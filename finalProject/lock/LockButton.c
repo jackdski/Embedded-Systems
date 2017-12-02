@@ -27,6 +27,8 @@ void configure_LockButton(){
 void PORT1_IRQHandler(){
     if(P1->IFG & BIT4){
         TIMER_A0->CCTL[0] |= TIMER_A_CCTLN_CCIE;  //Toggle Buzzer's pwm interrupts
+        //EUSCI_A3->IFG |= BIT1;
+        P6->OUT |= BIT1;
     }
 
     P1->IFG = 0;
