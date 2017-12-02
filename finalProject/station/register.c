@@ -1,18 +1,20 @@
 /*
 *
-* Wireless Bike Lock
+* Wireless Bike Lock - Station
 * register.c
 *
 * 11-20-17
 *
-*/
 
-#include "register.h"
 
+#include <Lcd.h>
+#include <Register.h>
 #include "msp.h"
 #include <stdint.h>
 #include <stdlib.h>
 
+//extern List_t * userList;
+*/
 /*
 typedef struct {
     uint64_t data;
@@ -26,7 +28,7 @@ typedef struct{
     volatile uint32_t length; // needs to be 60 for 60 sample sizes
 } List_t;
 */
-
+/*
 List_t * createList(uint32_t length) {
     if(length>0){
         List_t * newList = malloc(sizeof(List_t));
@@ -63,7 +65,7 @@ void resetList(List_t * list){
     list->num_items = 0;
 }
 */
-
+/*
 // Return 1 = Buffer is full, Return 0 = Buffer is not full
 int16_t isFullList(List_t * list) {
     if(!list){
@@ -90,7 +92,7 @@ void addItemList(List_t * list, User_t item) {
     list->num_items ++;
 }
 
-uint16_t isEmpty(List_t * list){
+uint16_t isEmptyList(List_t * list){
     if(!list){
         return 1;
     }
@@ -114,8 +116,8 @@ void loadToList(List_t * list, uint8_t * string, uint16_t length){
 
 }
 */
-
-User_t removeItem(List_t * list) {
+/*
+User_t removeItemList(List_t * list) {
     //if(!list){
     //    return 0xFF;
     //}
@@ -128,3 +130,23 @@ User_t removeItem(List_t * list) {
 
     return data;
 }
+
+uint16_t idAtoI(uint8_t * studentID) {
+    //takes a student id as a string and outputs it as an integer
+    uint32_t idInt;
+    // studentID is 9 characters long and a 32 bit integer
+    //      can hold numbers 10 tens places long
+}
+
+uint8_t * getStudentID() {
+    uint8_t studentID[9];
+    uint8_t msgOne[17] = "Enter StudentID: ";
+    //displayText(msgOne);
+    // have each uint8_tacter entered fill a corresponding spot in the studentID string
+    // instead of writing out the entire alphabet, just count how many times are clicked up or down with pattern
+    //      123456789-0-123456789 with that zero being the starting point
+    uint8_t msgTwo[11] = "ID accepted";
+    return studentID;
+
+}
+*/
