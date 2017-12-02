@@ -6,10 +6,14 @@
  */
 
 #include "msp.h"
+#include "User.h"
 #include "Circbuf.h"
+#include "Bluetooth.h"
+
 
 extern CircBuf_t * TXBuf;
 extern CircBuf_t * RXBuf;
+extern uint8_t * mainuser;
 
 /*
 typedef struct {
@@ -19,7 +23,7 @@ typedef struct {
 */
 
 //extern User_t * mainuser;
-extern uint8_t * mainuser;
+
 
 // see if devices are connected
 const uint8_t * ACKREQUEST = "ISCONNECTED"; //11 long
