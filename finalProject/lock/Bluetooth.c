@@ -1,10 +1,16 @@
 /*
+ * Wireless Bike Lock - Lock
  * Bluetooth.c
  *
- *  Created on: Nov 26, 2017
- *      Author: amabo
  */
+
 #include "Bluetooth.h"
+
+#include "msp.h"
+#include "Circbuf.h"
+
+extern CircBuf_t * TXBuf;
+extern CircBuf_t * RXBuf;
 
 //Connect 9.7 to the RX
 void configure_Bluetooth(){
@@ -21,35 +27,33 @@ void configure_Bluetooth(){
     EUSCI_A3->IFG &= ~(BIT1 | BIT0);
     UCA3IE |= (BIT0 | BIT1);  //Turn on interrupts for RX and TX
     NVIC_EnableIRQ(EUSCIA3_IRQn);
-
-    sendByte('A');
-}
-
-uint8_t deletethis = 0;
-void EUSCIA3_IRQHandler(){
-    if (EUSCI_A3->IFG & BIT0){
-        uint8_t data = EUSCI_A3->RXBUF;
-        P1->OUT ^= BIT0;
-    }
-
-    if (EUSCI_A3->IFG & BIT1){
-        //Transmit Stuff
-        EUSCI_A3->IFG &= ~BIT1;
-
-        /*if(isEmpty(TXBuf)){
-              return;
-        }*/
-       /* if(deletethis%2)
-            sendByte('A');
-        else
-            EUSCI_A3->IFG &= ~BIT1;
-        deletethis++;
-        */
-    }
-
 }
 
 void sendByte(uint8_t data){
     EUSCI_A3->TXBUF = data;
 }
 
+void bluetooth_send_n(uint8_t * data, uint8_t length){
+    //Code to iterate through the transmit data
+    if(!data)
+        return;
+    volatile uint8_t n;
+
+    for(n = 0; n<length; n++){
+        sendByte(data[n]);
+    }
+}
+
+void EUSCIA3_IRQHandler(){
+    if (EUSCI_A3->IFG & BIT0){
+        addItemCircBuf(RXBuf, EUSCI_A3->RXBUF);
+    }
+    if (EUSCI_A3->IFG & BIT1){
+        //Transmit Stuff
+        if(isEmpty(TXBuf)) {
+            EUSCI_A0->IFG &= ~BIT1;
+            return;
+        }
+        //send_byte(removeItem(TXBuf));
+    }
+}
