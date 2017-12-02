@@ -117,17 +117,3 @@ uint8_t removeItem(CircBuf_t * buf) {
 
     return data;
 }
-
-int16_t stoi(char * a) {
-    uint16_t returnArray [3];
-
-    int8_t count = 0;
-    while (count < 3) {
-        returnArray[count] = a[count] - 48;
-        count++;
-    }
-
-    int8_t finalInt = 0;
-    finalInt = returnArray[2] + (10 * returnArray[1]) + (100 * returnArray[0]);
-    return finalInt;
-}
