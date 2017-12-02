@@ -1,3 +1,4 @@
+#include <Checkout.h>
 #include "msp.h"
 #include "Bluetooth.h"
 #include "Buzzer.h"
@@ -5,8 +6,6 @@
 #include "Bluetooth.h"
 #include "SystemClock.h"
 #include "RGB.h"
-#include "Time.h
-
 #include <stdint.h>
 
 
@@ -18,27 +17,26 @@ uint8_t mins = 0;       // how many mins the bike is out for
 
 void main(void)
 {
-	WDT_A->CTL = WDT_A_CTL_PW | WDT_A_CTL_HOLD;		// stop watchdog timer
+    WDT_A->CTL = WDT_A_CTL_PW | WDT_A_CTL_HOLD;     // stop watchdog timer
 
-	checkoutTimerTickVal = checkoutTimerTicks(hours, mins); // calculate time to count to
-	
-	//configs
-	configure_SystemClock();
-	configure_Buzzer();
-	configure_LockButton();
-	configure_Bluetooth();
-	configure_RGB();
-	configureSystick();
+    checkoutTimerTicksVal = checkoutTimerTicks(hours, mins); // calculate time to count to
 
-	// if time has been set use this
-    	//startSysTick();
-	
-	P1->DIR |= BIT0;
-	P5->OUT |= BIT5;
-	P6->DIR |= BIT0 | BIT1;
-	P6->OUT |= (BIT0 | BIT4 | BIT5);
+    //configs
+    configure_SystemClock();
+    configure_Buzzer();
+    configure_LockButton();
+    configure_Bluetooth();
+    configure_RGB();
 
-	while(1){
+    // if time has been set use this
+    //startSysTick();
 
-	}
+    P1->DIR |= BIT0;
+    P5->OUT |= BIT5;
+    P6->DIR |= BIT0 | BIT1;
+    P6->OUT |= (BIT0 | BIT4 | BIT5);
+
+    while(1){
+
+    }
 }
