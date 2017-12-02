@@ -1,10 +1,13 @@
 #include "msp.h"
+#include "Bluetooth.h"
 #include "Buzzer.h"
 #include "LockButton.h"
 #include "Bluetooth.h"
 #include "SystemClock.h"
 #include "RGB.h"
 #include "Time.h
+
+#include <stdint.h>
 
 
 uint32_t systickCounter = 0;        //counts how man 0.5s have passed
