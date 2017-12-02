@@ -5,8 +5,18 @@
  *      Author: amabo
  */
 #include "Buzzer.h"
-uint16_t timeout = 0;
 
+#define TIMEOUT  5000
+
+//Boolean used to distinguish between the two pulse modes (one beep or five)
+uint8_t  pulseType;
+
+//Counter used to create the longer period of toggling over the higher frequency that drives the buzzer.
+uint16_t count = 0;
+/*
+ * The buzzer needs an output pin, and a timer to control it.  This function
+ * configures both
+ */
 void configure_Buzzer(){
     //Configure the buzzer control GPIO pin
     P5->DIR |= BIT4;
@@ -21,14 +31,53 @@ void configure_Buzzer(){
     NVIC_EnableIRQ(TA0_0_IRQn);
 }
 
+/*
+ * This is the Buzzer's Timer's Handler function.  It can produce two outputs on
+ * the buzzer's output.  It either has a constant wave for its entire period making one
+ * long beep, or it will produce four short beeps.  Once the period is over, count is
+ * reset and the timer is disabled
+ */
 void TA0_0_IRQHandler() {
-    timeout++;
-    P5->OUT ^= BIT4;              //Pulse P5.4 to run it at 5kHz
-    if(timeout >= 5000){
-        TIMER_A0->CCTL[0] &= !TIMER_A_CCTLN_CCIE;      // TACCR0 interrupt disable
-        timeout = 0;
-        P6->OUT &= ~BIT1;
+    //Increment our counter to determine the period
+    count++;
+
+    //If we want one long beep, toggle the pin every time
+    if(!pulseType)
+    {
+        P5->OUT ^= BIT4;              //Pulse P5.4 to run it at 5kHz
     }
-    TIMER_A0->CCTL[0] &= ~(BIT0); //Clear the interrupts
+
+    //If we want 4 short beeps, enable and disable the toggling every 500 counts
+    if(pulseType){
+        if(count % (TIMEOUT/5) < (TIMEOUT/10))
+        {
+            P5->OUT ^= BIT4;         //Pulse P5.4 to run it at 5kHz
+        }
+    }
+
+    //If we have reached the end of our period, reset the count and turn off the timer
+    if(count >= TIMEOUT){
+        TIMER_A0->CCTL[0] &= !TIMER_A_CCTLN_CCIE;      // TACCR0 interrupt disable
+        count = 0;
+    }
+
+    //Clear the timer interrupt
+    TIMER_A0->CCTL[0] &= ~(BIT0);
+}
+
+/*
+ * This function sets the pulseType to be one long beep, and enables the timer
+ */
+void long_buzz(){
+    pulseType = 0;
+    TIMER_A0->CCTL[0] |= TIMER_A_CCTLN_CCIE;  //Toggle Buzzer's pwm interrupts
+}
+
+/*
+ * This function sets the pulseType to be four short beeps, and enables the timer
+ */
+void short_buzzes(){
+    pulseType = 1;
+    TIMER_A0->CCTL[0] |= TIMER_A_CCTLN_CCIE;  //Toggle Buzzer's pwm interrupts
 }
 

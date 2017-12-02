@@ -9,6 +9,7 @@
 #define LOCKBUTTON_H_
 #include "msp.h"
 
+//Function to configure the Lock Button
 void configure_LockButton();
 
 #endif /* LOCKBUTTON_H_ */
