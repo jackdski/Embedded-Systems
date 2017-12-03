@@ -68,7 +68,7 @@ void TA0_0_IRQHandler() {
 /*
  * This function sets the pulseType to be one long beep, and enables the timer
  */
-void long_buzz(){
+inline void long_buzz(){
     pulseType = 0;
     TIMER_A0->CCTL[0] |= TIMER_A_CCTLN_CCIE;  //Toggle Buzzer's pwm interrupts
 }
@@ -76,7 +76,7 @@ void long_buzz(){
 /*
  * This function sets the pulseType to be four short beeps, and enables the timer
  */
-void short_buzzes(){
+inline void short_buzzes(){
     pulseType = 1;
     TIMER_A0->CCTL[0] |= TIMER_A_CCTLN_CCIE;  //Toggle Buzzer's pwm interrupts
 }

@@ -10,6 +10,10 @@
 #include "msp.h"
 
 //Configure the BeamBreak sensor
-void configure_beamBreaks();
+void configure_BeamBreaks();
+
+//These functions enable and disable the interrupts on the BeamBreak sensor.
+void enable_BeamBreaks();
+void disable_BeamBreaks();
 
 #endif /* BEAMBREAKS_H_ */

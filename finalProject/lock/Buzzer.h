@@ -13,9 +13,9 @@
 void configure_Buzzer();
 
 //Create one long beep
-void long_buzz();
+inline void long_buzz();
 
 //Create a set of 4 beeps
-void short_buzzes();
+inline void short_buzzes();
 
 #endif /* BUZZER_H_ */

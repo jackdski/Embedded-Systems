@@ -46,12 +46,13 @@ void bluetooth_send_n(uint8_t * data, uint8_t length){
 
 void EUSCIA3_IRQHandler(){
     if (EUSCI_A3->IFG & BIT0){
+        P1->OUT ^= BIT0;
         addItemCircBuf(RXBuf, EUSCI_A3->RXBUF);
     }
     if (EUSCI_A3->IFG & BIT1){
         //Transmit Stuff
         if(isEmpty(TXBuf)) {
-            EUSCI_A0->IFG &= ~BIT1;
+            EUSCI_A3->IFG &= ~BIT1;
             return;
         }
         //send_byte(removeItem(TXBuf));

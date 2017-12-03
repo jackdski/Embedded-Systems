@@ -12,7 +12,7 @@
 #include <stdint.h>
 
 //Configure the solenoid circuit
-void configure_solenoid();
+void configure_Solenoid();
 
 //Function to activate the solenoid
 void pullLatch();

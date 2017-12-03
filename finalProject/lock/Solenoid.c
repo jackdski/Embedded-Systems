@@ -12,7 +12,7 @@ uint8_t solCount = 0;
 /*
  * The solenoid is controlled by a single output pin and a timer.  This function configures both
  */
-void configure_solenoid(){
+void configure_Solenoid(){
     //Configure the enable pin to be an output
     P6->DIR |= BIT1;
 
@@ -30,9 +30,10 @@ void configure_solenoid(){
  * In order to lock and unlock the solenoid, we need to pull it back.  We do this by writing our enable pin high, and starting our timer
  * The timer will count out the period, and turn off the solenoid.
  */
-void pullLatch(){
+inline void pullLatch(){
     P6->OUT |= BIT1;
-    TIMER_A1->CCTL[0] |= TIMER_A_CCTLN_CCIE;      // TACCR0 interrupt disable
+    TIMER_A1->R = 0;                              // Clear timer count
+    TIMER_A1->CCTL[0] |= TIMER_A_CCTLN_CCIE;      // Timer 1 interrupt disable
 }
 
 /*
