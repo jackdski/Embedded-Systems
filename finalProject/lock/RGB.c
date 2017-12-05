@@ -5,10 +5,15 @@
  *      Author: amabo
  */
 #include "RGB.h"
+#include "State.h"
+#include "BeamBreaks.h"
 
+extern State lockState;
 
 //Extra counter used to extend the period that the LED is activated
 uint8_t RGBCount = 0;
+
+uint8_t timedOut = 0;
 
 /*
  * In order to configure the LEDs, we only need to set their direction to be outputs.
@@ -61,8 +66,15 @@ void TA2_0_IRQHandler() {
     //Increment solCount
     RGBCount++;
 
-    //If solCount has reached 75, reset it, turn off the solenoid, and turn off the timer
-    if(RGBCount == 40){
+    //
+    if(RGBCount >= 40 && lockState != Unlockable){
+        RGBCount = 0;
+        LED_Off();
+        TIMER_A2->CCTL[0] &= !TIMER_A_CCTLN_CCIE;      // TACCR0 interrupt disable
+    }
+
+    if(RGBCount >= 80 && lockState == Unlockable){
+        timedOut = 1;
         RGBCount = 0;
         LED_Off();
         TIMER_A2->CCTL[0] &= !TIMER_A_CCTLN_CCIE;      // TACCR0 interrupt disable

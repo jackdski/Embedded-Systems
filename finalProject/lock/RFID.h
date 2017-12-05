@@ -8,7 +8,10 @@
 #ifndef RFID_H_
 #define RFID_H_
 #include "msp.h"
+#include <stdint.h>
 
 void configure_RFID();
+
+uint8_t compare_RFID();
 
 #endif /* RFID_H_ */

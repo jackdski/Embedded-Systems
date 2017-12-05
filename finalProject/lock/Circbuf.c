@@ -53,7 +53,7 @@ void resetCircBuf(CircBuf_t * buf){
 }
 
 // Return 1 = Buffer is full, Return 0 = Buffer is not full
-int8_t isFullCircBuf(CircBuf_t * buf) {
+inline int8_t isFullCircBuf(CircBuf_t * buf) {
     if(!buf){
         return 0;
     }

@@ -15,5 +15,7 @@ void configure_BeamBreaks();
 //These functions enable and disable the interrupts on the BeamBreak sensor.
 void enable_BeamBreaks();
 void disable_BeamBreaks();
+uint8_t beams_Blocked();
+
 
 #endif /* BEAMBREAKS_H_ */

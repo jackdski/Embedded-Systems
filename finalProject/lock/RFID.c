@@ -5,6 +5,17 @@
  *      Author: amabo
  */
 #include "RFID.h"
+#include "Circbuf.h"
+#include <stdlib.h>
+#include "State.h"
+#include "Buzzer.h"
+#include "RGB.h"
+
+extern CircBuf_t * RFIDBuf;
+extern State       lockState;
+extern uint8_t   * mainUser; // stores registered RFID data
+extern uint8_t     newRFID;             // Flags that we have stored a new RFID tag
+
 
 /*
  * The RFID reader makes use of one GPIO pin to control the reset input of the reader, and it makes use of the EUSCI_A2 in order to
@@ -35,8 +46,39 @@ void configure_RFID(){
  * Whenever we receive information from our RFID reader, store it for comparisons
  */
 void EUSCIA2_IRQHandler(){
+
     if (EUSCI_A2->IFG & BIT0){
-        uint8_t data = EUSCI_A2->RXBUF;
-        P1->OUT ^= BIT0;
+
+        if(lockState != Locked){
+            Red_LED_On();
+            short_buzzes();
+            EUSCI_A2->RXBUF;
+        }
+        else{
+            addItemCircBuf(RFIDBuf, EUSCI_A2->RXBUF);
+        }
+        if(isFullCircBuf(RFIDBuf)){
+            newRFID = 1;
+        }
+
     }
+}
+
+//This function returns a boolean in order to determine if the new RFID string matches
+//Our registered user.  True is a match, false is they are different.
+uint8_t compare_RFID(){
+    volatile int i;
+
+    //Go through each letter of our stored userID.  If the id doesn't match the read tag
+    //at any point, return false.  Otherwise return true when finished.
+    for(i = 0; i < 16; i++){
+        uint8_t main = mainUser[i];
+        uint8_t new  = removeItem(RFIDBuf);
+        if(main != new){
+            resetCircBuf(RFIDBuf);
+            return 0;
+        }
+    }
+    resetCircBuf(RFIDBuf);
+    return 1;
 }

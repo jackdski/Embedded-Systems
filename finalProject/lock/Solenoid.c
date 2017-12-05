@@ -5,6 +5,12 @@
  *      Author: amabo
  */
 #include "Solenoid.h"
+#include "State.h"
+#include "BeamBreaks.h"
+
+extern State lockState;
+
+uint8_t checkBeamBreak = 0;
 
 //Extra counter used to extend the period that the Solenoid is activated
 uint8_t solCount = 0;
@@ -14,7 +20,8 @@ uint8_t solCount = 0;
  */
 void configure_Solenoid(){
     //Configure the enable pin to be an output
-    P6->DIR |= BIT1;
+    P6->DIR |=  BIT1;
+    P6->OUT &= ~BIT1;
 
     //Configure TimerA1 to control the lock
     TIMER_A1->R = 0;                    // Clear timer count
@@ -48,6 +55,9 @@ void TA1_0_IRQHandler() {
     //If solCount has reached 75, reset it, turn off the solenoid, and turn off the timer
     if(solCount == 75){
         solCount = 0;
+        if(lockState == Unlocked)
+            checkBeamBreak = 1;
+
         P6->OUT &= ~BIT1;
         TIMER_A1->CCTL[0] &= !TIMER_A_CCTLN_CCIE;      // TACCR0 interrupt disable
     }

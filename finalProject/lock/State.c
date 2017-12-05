@@ -53,6 +53,10 @@ void enterState(State newState){
     }
     else if(newState == Unlockable){
         //We will start the solenoid Timer A1 to force this
+
+        Blue_LED_On();
+        long_buzz();
+
         //State Transition
         lockState = Unlockable;
     }

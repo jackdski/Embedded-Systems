@@ -50,3 +50,10 @@ void PORT4_IRQHandler(){
     //Clear the Interrupt flags
     P4->IFG = 0;
 }
+
+/*
+ * Returns a boolean of whether or not the beams have yet to be broken.
+ */
+inline uint8_t beams_Blocked(){
+    return P4->IN;
+}
