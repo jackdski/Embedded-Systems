@@ -12,15 +12,6 @@
 extern CircBuf_t * TXBuf;
 extern CircBuf_t * RXBuf;
 
-/*
-typedef struct {
-    uint8_t direction;
-    uint8_t cmd;
-    uint8_t * data;
-    uint8_t * checksum;
-} BTCMD;
-*/
-
 void configure_SystemClock(){
     CS-> KEY = 0x695A; //Unlock module for register access
     CS-> CTL0 = 0;     //Reset tuning parameters
@@ -48,6 +39,10 @@ void configure_Bluetooth(){
     NVIC_EnableIRQ(EUSCIA2_IRQn);
 }
 
+inline void sendByte(uint8_t data){
+    EUSCI_A2->TXBUF = data;
+}
+
 void bluetooth_send_n(uint8_t * data, uint8_t length){
     //Code to iterate through the transmit data
     if(!data)
@@ -58,123 +53,19 @@ void bluetooth_send_n(uint8_t * data, uint8_t length){
     }
 }
 
-void sendByte(uint8_t data){
-    EUSCI_A2->TXBUF = data;
-    //P1->OUT ^= BIT0;
-}
-
-void sendBTCMD(BTCMD cmd) {
-    addItemCircBuf(TXBuf, cmd.direction);
-    addItemCircBuf(TXBuf, cmd.cmd);
-    // add every character of cmd.data
-    volatile uint8_t n;
-    for(n = 0; n < 16; n++) {
-        addItemCircBuf(TXBuf, cmd.data[n]);
-    }
-    addItemCircBuf(TXBuf, cmd.checksum);
-}
-
-void sendHeartbeat() {
-    BTCMD heartbeat;
-    heartbeat.direction = STOL;
-    heartbeat.cmd = HEARTBEAT;
-    heartbeat.data = "0000000000000000";
-    heartbeat.checksum = '152';
-    sendBTCMD(heartbeat);
-}
-
 void sendRFIDData(uint8_t * rfiddata) {
-    BTCMD rfidsend;
-    rfidsend.direction = STOL;
-    rfidsend.cmd = RFIDDATA;
-    rfidsend.data = rfiddata;
-    rfidsend.checksum = '152';
-    sendBTCMD(rfidsend);
+    uint8_t * newData = rfiddata;
+    bluetooth_send_n(newData, 16);
 }
 
 void sendDeleteRFID() {
-    BTCMD delete;
-    delete.direction = STOL;
-    delete.cmd = DELETERFID;
-    delete.data = "0000000000000000";
-    delete.checksum = '152';
-    sendBTCMD(delete); // send the command with the above data
+    uint8_t * deleteData = "0000000000000000";
+    bluetooth_send_n(deleteData, 16);
 }
 
-void sendChecksumValid() {
-    BTCMD checksumvalid;
-    checksumvalid.direction = LTOS;
-    checksumvalid.cmd = CHKSUMVALID;
-    checksumvalid.data = "0000000000000000";
-    checksumvalid.checksum = '152';
-    sendBTCMD(checksumvalid);
-}
-
-void sendChecksumBad() {
-    BTCMD checksumbad;
-    checksumbad.direction = LTOS;
-    checksumbad.cmd = CHKSUMBAD;
-    checksumbad.data = "0000000000000000";
-    checksumbad.checksum = '152';
-    sendBTCMD(checksumbad);
-}
-
-void sendReturnHB() {
-    BTCMD returnHB;
-    heartbeat.direction = lTOS;
-    heartbeat.cmd = RETURNHB;
-    heartbeat.data = "0000000000000000";
-    heartbeat.checksum = '152';
-    sendBTCMD(returnHB);
-}
-
-void sendReturnRFID() {
-    BTCMD returnRFID;
-    returnRFID.direction = lTOS;
-    returnRFID.cmd = RETURNRFID;
-    returnRFID.data = "0000000000000000";
-    returnRFID.checksum = '152';
-    sendBTCMD(returnRFID);
-}
-
-// 1 == OK, 0 == NOT OK
-void checksum(BTCMD * cmd) {
-    uint8_t i;
-    uint16_t calcChecksum = 0;
-    uint8_t * ptr = (uint8_t *)cmd;
-    for(i = 0; i < sizeof(BTCMD) - 1; i++) {
-        calcChecksum += *ptr;
-        ptr++;
-    }
-    if(cmd->checksum == calcChecksum) {
-        //sendChecksumValid();
-        return 1;
-    }
-    else {
-        //sendChecksumBad();
-        return 0;
-    }
-}
-/*
- * Wireless Bike Lock Bluetooth Packet Structure
- *
- * [ DIRECTION | CMDTYPE | CMDDATA | CHKSUM  ]
- * [  8 bits   | 8 bits  | 128 bits| 24 bits ]
- *                  168 bits per message
- *                  21 bytes per message
- */
-BTCMD parseBTCMD() {
-    BTCMD parse;
-    uint8_t i;
-    parse.direction = RXBuf->buffer[0];
-    parse.cmd = RXBuf->buffer[1];
-    for(i=2;i<18;i++){
-        parse.data[i] = RXBuf->buffer[i];
-    }
-    for(i=18;i<21;i++) {
-        parse.checksum[i] = RXBuf->buffer[i];
-    }
-    return parse;
+void heartbeat() {
+    uint8_t * hello = "helloXXXXXXXXXXX";
+    bluetooth_send_n(hello, 16);
 }
 
 void EUSCIA2_IRQHandler(){
@@ -187,8 +78,7 @@ void EUSCIA2_IRQHandler(){
             EUSCI_A2->IFG &= ~BIT1;
             return;
         }
-        EUSCI_A2->TXBUF = removeItem(TXBuf);
-        P1->OUT ^= BIT0;
+        sendByte(removeItem(TXBuf));
     }
 
 }
