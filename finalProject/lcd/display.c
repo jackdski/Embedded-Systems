@@ -12,6 +12,7 @@
 #include <arm_math.h>
 #include "arm_const_structs.h"
 #include "ButtonConfig.h"
+#include "clock.h"
 
 extern Graphics_Context g_sContext;
 
