@@ -7,10 +7,14 @@
 *
 */
 
-#include "buttons.h"
-
 #include "msp.h"
+#include "Buttons.h"
+#include "Bluetooth.h"
 #include <stdint.h>
+
+
+extern CircBuf_t * TXBuf;
+extern CircBuf_t * RXBuf;
 
 void configButtons() {
     /*
@@ -54,6 +58,8 @@ void PORT5_IRQHandler() {
     if (P5->IFG & BIT1) {
         P2->OUT &= ~(BIT0 | BIT1 | BIT2);
         P2->OUT ^= BIT0;
+        loadToBuf(TXBuf, "abcdefghijklmno", 15);
+        sendByte(removeItem(TXBuf));
     }
     P5->IFG = 0;
 }
@@ -66,13 +72,15 @@ void PORT3_IRQHandler() {
     P3->IFG = 0;
 }
 
+/*
 void borrowBike() {
-    /*
+
      * 1. LCD Screen
      * 2. Time Select
      * 3. Get RFID data / Student ID
      * 4. Send data to bike lock
      * 5. Return to default screen
      *
-     */
+
 }
+*/
