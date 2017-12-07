@@ -1,5 +1,5 @@
 Includes
-	C:/ti/ccsv7/ccs_base/arm/include
+    C:/ti/ccsv7/ccs_base/arm/include
     C:/ti/ccsv7/ccs_base/arm/include/CMSIS
     C:/ti/ccsv7/tools/compiler/ti-cgt-arm_16.9.3.LTS/include
     LCD_Test_1
