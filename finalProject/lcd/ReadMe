@@ -1,0 +1,15 @@
+Includes
+	C:/ti/ccsv7/ccs_base/arm/include
+    C:/ti/ccsv7/ccs_base/arm/include/CMSIS
+    C:/ti/ccsv7/tools/compiler/ti-cgt-arm_16.9.3.LTS/include
+    LCD_Test_1
+    LCD_Test_1/CMSIS/Include
+    LCD_Test_1/driverlib/MSP432P4xx
+    LCD_Test_1/GrLib/fonts
+    LCD_Test_1/GrLib/grlib
+    LCD_Test_1/LcdDriver
+CMSIS
+driverlib
+GrLib
+LcdDriver
+dsplib-msp432.lib
