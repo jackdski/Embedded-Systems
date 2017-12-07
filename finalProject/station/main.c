@@ -6,54 +6,43 @@
 */
 
 #include "msp.h"
-#include "Bluetooth.h"
-#include "Borrow.h"
+#include <stdint.h>
 #include "Buttons.h"
-#include "Lcd.h"
-//#include "Register.h"
+#include "Bluetooth.h"
 #include "Circbuf.h"
 
 
 /*
  * Wireless Bike Lock Bluetooth Packet Structure
  *
- * [ DIRECTION | CMDTYPE | CMDDATA | CHKSUM  ]
- * [  8 bits   | 8 bits  | 128 bits| 24 bits ]
- *                  168 bits per message
- *                  21 bytes per message
+ * [    RFIDDATA    ]
+ * [    16 BYTES    ]
+ *              152 BITS
+ *              19 BYTES
  */
-// Direction stuff
-//#define STOL (0X00)
-//#define LTOS (0x11)
-
-// Command types so receiver knows what to do with this data
-#define HEARTBEAT   (0x01) // ack request with dummy data
-#define RFIDDATA    (0X02) // contains rfid data to give to lock
-#define DELETERFID  (0X03) // delete the rfid data currently stored
-#define CHKSUMVALID (0x04) // the checksum is correct
-#define CHKSUMBAD   (0x05) // the checksum is incorrect
-#define RETURNHB    (0x06) // ack return with dummy data
-#define RETURNRFID  (0x07) // says it got RFID data correctly
 
 volatile CircBuf_t * TXBuf;
 volatile CircBuf_t * RXBuf;
 
-volatile uint8_t checkPacket = 0;
-
-//List_t * userList;
+volatile uint8_t dummyRfidCheck;
+volatile uint8_t dummyTimeCheck;
 
 void main(void) {
     WDT_A->CTL = WDT_A_CTL_PW | WDT_A_CTL_HOLD;     // stop watchdog timer
     // configs
-    //configButtons();
+    configButtons();
     configure_SystemClock();
     configLED();
     configure_Bluetooth();
 
+
     // User List
     //userList = createList(300);
-    TXBuf = createCircBuf(21);
-    RXBuf = createCircBuf(21);
+    TXBuf = createCircBuf(200);
+    RXBuf = createCircBuf(200);
+
+    uint8_t * dummyRFID = "XXXXXXXXXXXXXXXX";
+    uint8_t * dummyTime = "XXX";
 
     P1->SEL0 &= ~(BIT0);
     P1->SEL1 &= ~(BIT0);
@@ -62,22 +51,30 @@ void main(void) {
 
     volatile uint8_t i;
     volatile uint8_t j;
-    BTCMD parsed;
-    uint8_t check;
+    uint8_t * rfidData; // [16] = "0000000000000000";
+    uint8_t * time; // [3] = "000";
 
     while(1) {
         // If buffer is not being filled check it
         if(!(EUSCI_A2->IFG |= BIT1)) {
-            parsed = parseBTCMD();
-            check = checksum(parsed);
-            if(check){
-                //do stuff with data
-
+            for(i=0;i<16;i++) {
+                rfidData[i] = RXBuf->buffer[i];
             }
-            else {
-                sendCheckSumBad();
+            for(i=16;i<19;i++){
+                time[i-16] = RXBuf->buffer[i];
+            }
+            dummyRfidCheck = 0;
+            dummyTimeCheck = 0;
+            for(i=0;i<16;i++){
+                if(dummyRFID[i] == rfidData[i]) {
+                    dummyRfidCheck++;
+                }
+            }
+            for(i=16;i<19;i++) {
+                if(dummyTime[i] == time[i]) {
+                    dummyTimeCheck++;
+                }
             }
         }
-        check = 0;
     }
 }
