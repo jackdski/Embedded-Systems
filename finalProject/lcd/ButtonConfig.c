@@ -4,7 +4,6 @@
  *  Created on: Dec 2, 2017
  *      Author: Stefan
  */
-
 #include "msp.h"
 #include "ButtonConfig.h"
 #include "core_cm4.h"
@@ -12,6 +11,7 @@
 #include <driverlib.h>
 #include <grlib.h>
 #include "Crystalfontz128x128_ST7735.h"
+#include "clock.h"
 
 
 volatile uint8_t slideNum = 1;
