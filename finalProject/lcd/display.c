@@ -103,6 +103,20 @@ void noBikes(void){
     Graphics_drawStringCentered(&g_sContext, (int8_t *)"bikes available", GRAPHICS_AUTO_STRING_LENGTH, 64, 75, GRAPHICS_TRANSPARENT_TEXT);
 }
 
+void goBlue(void){
+    Graphics_flushBuffer(&g_sContext);
+    Graphics_clearDisplay(&g_sContext);
+    Graphics_setForegroundColor(&g_sContext, ClrWhite);
+    Graphics_setBackgroundColor(&g_sContext, ClrBlue);
+}
+
+void goBlack(void){
+    Graphics_flushBuffer(&g_sContext);
+    Graphics_clearDisplay(&g_sContext);
+    Graphics_setForegroundColor(&g_sContext, ClrWhite);
+    Graphics_setBackgroundColor(&g_sContext, ClrBlack);
+}
+
 void error(void){
     Graphics_flushBuffer(&g_sContext);
     Graphics_clearDisplay(&g_sContext);
@@ -111,6 +125,18 @@ void error(void){
     Graphics_drawStringCentered(&g_sContext, (int8_t *)"Error: 404", GRAPHICS_AUTO_STRING_LENGTH, 64, 64, GRAPHICS_TRANSPARENT_TEXT);
 }
 
+void noDoubleDipping(void){
+    Graphics_flushBuffer(&g_sContext);
+    Graphics_clearDisplay(&g_sContext);
+    Graphics_setForegroundColor(&g_sContext, ClrWhite);
+    Graphics_setBackgroundColor(&g_sContext, ClrBlack);
+    Graphics_drawStringCentered(&g_sContext, (int8_t *)"We apologize,", GRAPHICS_AUTO_STRING_LENGTH, 64, 25, GRAPHICS_TRANSPARENT_TEXT);
+    Graphics_drawStringCentered(&g_sContext, (int8_t *)"but you already", GRAPHICS_AUTO_STRING_LENGTH, 64, 40, GRAPHICS_TRANSPARENT_TEXT);
+    Graphics_drawStringCentered(&g_sContext, (int8_t *)"have a bike in", GRAPHICS_AUTO_STRING_LENGTH, 64, 55, GRAPHICS_TRANSPARENT_TEXT);
+    Graphics_drawStringCentered(&g_sContext, (int8_t *)"your name.", GRAPHICS_AUTO_STRING_LENGTH, 64, 70, GRAPHICS_TRANSPARENT_TEXT);
+    Graphics_drawStringCentered(&g_sContext, (int8_t *)"Return it before", GRAPHICS_AUTO_STRING_LENGTH, 64, 90, GRAPHICS_TRANSPARENT_TEXT);
+    Graphics_drawStringCentered(&g_sContext, (int8_t *)"requesting a new one", GRAPHICS_AUTO_STRING_LENGTH, 64, 105, GRAPHICS_TRANSPARENT_TEXT);
+}
 
 
 
