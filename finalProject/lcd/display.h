@@ -27,10 +27,29 @@ void checkout();
 void thankYou();
 
 // no bikes available
+// also an Incredibles reference!!
 void noBikes();
+
+// reset screen for blue background with white text
+void goBlue();
+
+// reset screen to (default) black background with white text
+void goBlack();
 
 // Error: 404 slide
 void error();
 
+// for users already registered, tryna get another bike
+void noDoubleDipping();
+
 
 #endif /* DISPLAY_H_ */
+
+
+
+
+
+
+
+
+
