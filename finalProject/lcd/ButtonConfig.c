@@ -51,7 +51,7 @@ void PORT3_IRQHandler(void){
         Delay0();
         slideNum++;
     }
-    if(slideNum > 6){
+    if(slideNum > 7){
         slideNum = 1;
     }
     P3->IFG &= ~(BIT5);
@@ -66,7 +66,7 @@ void PORT5_IRQHandler(void){
         slideNum--;
     }
     if(slideNum < 1){
-        slideNum = 6;
+        slideNum = 7;
     }
     P5->IFG &= ~(BIT1);
     P3->IFG &= ~(BIT5);
