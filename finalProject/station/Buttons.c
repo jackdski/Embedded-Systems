@@ -56,9 +56,15 @@ void configLED() {
 
 void PORT5_IRQHandler() {
     if (P5->IFG & BIT1) {
-        P2->OUT &= ~(BIT0 | BIT1 | BIT2);
+        //P2->OUT &= ~(BIT0 | BIT1 | BIT2);
         P2->OUT ^= BIT0;
-        loadToBuf(TXBuf, "abcdefghijklmno", 15);
+        loadToBuf(TXBuf, "abcdefghijklmnop", 16);
+        //uint8_t * test = "abcdefghijklmnop";
+        EUSCI_A2->IFG |= BIT1;
+        //while(!isEmpty(TXBuf));
+        //resetCircBuf(TXBuf);
+
+        //bluetooth_send_n(test, 15);
         sendByte(removeItem(TXBuf));
     }
     P5->IFG = 0;
