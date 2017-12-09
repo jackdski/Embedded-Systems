@@ -122,7 +122,12 @@ void error(void){
     Graphics_clearDisplay(&g_sContext);
     Graphics_setForegroundColor(&g_sContext, ClrWhite);//ClrBlack
     Graphics_setBackgroundColor(&g_sContext, ClrBlack);//ClrWhite
-    Graphics_drawStringCentered(&g_sContext, (int8_t *)"Error: 404", GRAPHICS_AUTO_STRING_LENGTH, 64, 64, GRAPHICS_TRANSPARENT_TEXT);
+    Graphics_drawString(&g_sContext, (int8_t *)":(", GRAPHICS_AUTO_STRING_LENGTH, 20, 30, GRAPHICS_TRANSPARENT_TEXT);
+    Graphics_drawString(&g_sContext, (int8_t *)"Error: 404", GRAPHICS_AUTO_STRING_LENGTH, 20, 40, GRAPHICS_TRANSPARENT_TEXT);
+    Graphics_drawString(&g_sContext, (int8_t *)"You definitely", GRAPHICS_AUTO_STRING_LENGTH, 20, 80, GRAPHICS_TRANSPARENT_TEXT);
+    Graphics_drawString(&g_sContext, (int8_t *)"messed up", GRAPHICS_AUTO_STRING_LENGTH, 20, 90, GRAPHICS_TRANSPARENT_TEXT);
+    Graphics_drawString(&g_sContext, (int8_t *)"somewhere...", GRAPHICS_AUTO_STRING_LENGTH, 20, 100, GRAPHICS_TRANSPARENT_TEXT);
+    Graphics_drawString(&g_sContext, (int8_t *)"0% complete...", GRAPHICS_AUTO_STRING_LENGTH, 45, 120, GRAPHICS_TRANSPARENT_TEXT);
 }
 
 void noDoubleDipping(void){
