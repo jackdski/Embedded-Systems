@@ -14,7 +14,7 @@ void LCD_configure();
 // Defines the specifications of the slide-0 state
 void clearSlide();
 
-// Defines slide-1 "Welcome"
+// Defines "Welcome" screen instructing RFID bump
 void welcomeScreen();
 
 // Register studentID using joystick and buttons
