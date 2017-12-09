@@ -34,13 +34,14 @@ void configure_Bluetooth(){
     EUSCI_A2->MCTLW |= (BIT0 | BIT5);           //Set modulator bits
     EUSCI_A2->CTLW0 &= ~(EUSCI_A_CTLW0_SWRST);  //Initialize eUSCI
 
-    EUSCI_A2->IFG &= ~(BIT1 | BIT0);
+    EUSCI_A2->IFG &= ~(BIT0 | BIT1);
     UCA2IE |= (BIT0 | BIT1);  //Turn on interrupts for RX and TX
     NVIC_EnableIRQ(EUSCIA2_IRQn);
 }
 
 inline void sendByte(uint8_t data){
     EUSCI_A2->TXBUF = data;
+    while(!(EUSCI_A2->IFG & BIT1));
 }
 
 void bluetooth_send_n(uint8_t * data, uint8_t length){
@@ -80,5 +81,4 @@ void EUSCIA2_IRQHandler(){
         }
         sendByte(removeItem(TXBuf));
     }
-
 }
