@@ -1,3 +1,9 @@
+/*
+ * main.c
+ *
+ *  Created on: Dec 2, 2017
+ *      Author: Stefan
+ */
 #include "msp.h"
 #include <driverlib.h>
 #include <grlib.h>
@@ -7,7 +13,7 @@
 #include "arm_const_structs.h"
 #include "ButtonConfig.h"
 #include "display.h"
-#include "clock.h
+#include "clock.h"
 
 
 extern volatile uint8_t slideNum;
@@ -49,3 +55,5 @@ int main(void)
             while(slideNum == 7);}
     }
 }
+
+
