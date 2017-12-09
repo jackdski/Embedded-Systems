@@ -1,80 +1,59 @@
-/*
-* Wireless Bike Lock
-* main.c
-*
-* 11-12-17
-*/
+#include <stdlib.h>
 
 #include "msp.h"
-#include <stdint.h>
-#include "Buttons.h"
-#include "Bluetooth.h"
+#include "Student.h"
 #include "Circbuf.h"
+#include "State.h"
+#include "RFID.h"
+#include "SystemClock.h"
+#include "Buttons.h"
 
+Student_t * registry;
+CircBuf_t * RFIDBuf;
+uint8_t     newRFID = 0;
 
-/*
- * Wireless Bike Lock Bluetooth Packet Structure
- *
- * [    RFIDDATA    ]
- * [    16 BYTES    ]
- *              152 BITS
- *              19 BYTES
+State stationState;
+/**
+ * main.c
  */
+void main(void)
+{
+	WDT_A->CTL = WDT_A_CTL_PW | WDT_A_CTL_HOLD;		// stop watchdog timer
 
-volatile CircBuf_t * TXBuf;
-volatile CircBuf_t * RXBuf;
+	//Initialize the registry to have no students
+	registry = NULL;
 
-volatile uint8_t dummyRfidCheck;
-volatile uint8_t dummyTimeCheck;
-
-void main(void) {
-    WDT_A->CTL = WDT_A_CTL_PW | WDT_A_CTL_HOLD;     // stop watchdog timer
-    // configs
-    configButtons();
-    configure_SystemClock();
-    configLED();
-    configure_Bluetooth();
+	configure_RFID();
+	configure_SystemClock();
+	configure_LockButton();
 
 
-    // User List
-    //userList = createList(300);
-    TXBuf = createCircBuf(200);
-    RXBuf = createCircBuf(200);
+	//Create an RFIDBuffer to hold our 16 chars of RFID data
+	RFIDBuf = createCircBuf(16);
 
-    uint8_t * dummyRFID = "XXXXXXXXXXXXXXXX";
-    uint8_t * dummyTime = "XXX";
+	while(1){
+	    if(newRFID){
+	        newRFID = 0;
 
-    P1->SEL0 &= ~(BIT0);
-    P1->SEL1 &= ~(BIT0);
-    P1->DIR |= BIT0;
-    P1->OUT |= BIT0;
+	        //Create a string to hold our new data, and create an iterator to populate it
+	        uint8_t readRFID[16];
+	        uint8_t i = 0;
 
-    volatile uint8_t i;
-    volatile uint8_t j;
-    uint8_t * rfidData; // [16] = "0000000000000000";
-    uint8_t * time; // [3] = "000";
+	        //Store each character in its corresponding place in the string and clear the buff.
+	        for(i = 0; i < 16; i++){
+	            readRFID[i] = removeItem(RFIDBuf);
+	        }
+            resetCircBuf(RFIDBuf);
 
-    while(1) {
-        // If buffer is not being filled check it
-        if(!(EUSCI_A2->IFG |= BIT1)) {
-            for(i=0;i<16;i++) {
-                rfidData[i] = RXBuf->buffer[i];
-            }
-            for(i=16;i<19;i++){
-                time[i-16] = RXBuf->buffer[i];
-            }
-            dummyRfidCheck = 0;
-            dummyTimeCheck = 0;
-            for(i=0;i<16;i++){
-                if(dummyRFID[i] == rfidData[i]) {
-                    dummyRfidCheck++;
-                }
-            }
-            for(i=16;i<19;i++) {
-                if(dummyTime[i] == time[i]) {
-                    dummyTimeCheck++;
-                }
-            }
-        }
-    }
+
+	        //Check to see if we have already registered this student and enter the appropriate state
+	        if(!findStudent(readRFID)){
+	            enterState(Register);
+	            registerStudent(readRFID);
+	            //Enter Stefan's register student joystick stuff
+	        }
+
+	    }
+
+	}
 }

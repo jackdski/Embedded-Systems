@@ -1,86 +1,61 @@
 /*
-*
-* Wireless Bike Lock
-* buttons.c
-*
-* 11-20-17
-*
-*/
+ * Buttons.c
+ *
+ *  Created on: Dec 6, 2017
+ *      Author: amabo
+ */
 
-#include "msp.h"
+
+
 #include "Buttons.h"
-#include "Bluetooth.h"
-#include <stdint.h>
 
+extern uint8_t SIDReady;
+extern uint8_t newSID[4];
 
-extern CircBuf_t * TXBuf;
-extern CircBuf_t * RXBuf;
+/*
+ * In order to configure the lock button, we need to set it as an input, enable internal resistors
+ * Make it a pullup circuit, set the transition to be from high to low, and enable the interrupts.
+ * This function takes care of all of this initialization
+ */
+void configure_LockButton(){
+    //Configure the right button (1.4) to be the Admin Button
+    //Configure the right button (1.1) to be the Lock button
+    P1->DIR &=  ~(BIT1 | BIT4);      // Set P1.4 Direction to input
+    P1->REN |=    BIT1 | BIT4;       // Enable pullup/pulldown hardware
+    P1->OUT |=    BIT1 | BIT4;       // Make it a pullup button
+    P1->IES |=    BIT1 | BIT4;       // Set P1 IFG flag to high-to-low transition
 
-void configButtons() {
-    /*
-     * Button Pins:
-     *  'A' : J4.33 -> P5.1
-     *  'B' : J4.32 -> P3.5
-     */
+    //Enable interrupts at the peripheral for the Admin Button
+    P1->IFG =  0;
+    P1->IE  =     BIT1 | BIT4;
 
-      //Configure the BoosterPack's buttons so they can control transmission
-      P3->SEL0 &= ~(BIT5);      // Set Port Pin Selection to General IO Mode
-      P3->SEL1 &= ~(BIT5);      // Make sure not to use tertiary function of P1.1
-      P3->DIR &=  ~(BIT5);      // Set P1.1 Direction to Input
-      P3->REN |=   (BIT5);       // Enable Pullup/Pulldown
-      P3->OUT |=   (BIT5);       // Enable PULLUP
-      P3->IES |=   (BIT5);       // Set P1 IFG flag to high to low transition
-      //Configure the BoosterPack's buttons so they can control transmission
-      P5->SEL0 &= ~(BIT1);      // Set Port Pin Selection to General IO Mode
-      P5->SEL1 &= ~(BIT1);      // Make sure not to use tertiary function of P1.1
-      P5->DIR &=  ~(BIT1);      // Set P1.1 Direction to Input
-      P5->REN |=   (BIT1);       // Enable Pullup/Pulldown
-      P5->OUT |=   (BIT1);       // Enable PULLUP
-      P5->IES =    (BIT1);       // Set P1 IFG flag to high to low transition
-
-      P5->IFG = 0;
-      P5->IE |= (BIT1);
-      NVIC_EnableIRQ(PORT5_IRQn);
-
-      P3->IFG = 0;
-      P3->IE |= BIT5;
-      NVIC_EnableIRQ(PORT3_IRQn);
-}
-
-void configLED() {
-    P2->SEL0 &=  ~(BIT0 | BIT1 | BIT2);
-    P2->SEL1 &=  ~(BIT0 | BIT1 | BIT2);
-    P2->DIR |=    (BIT0 | BIT1 | BIT2);
-    P2->OUT &=   ~(BIT0 | BIT1 | BIT2);
-}
-
-void PORT5_IRQHandler() {
-    if (P5->IFG & BIT1) {
-        P2->OUT &= ~(BIT0 | BIT1 | BIT2);
-        P2->OUT ^= BIT0;
-        loadToBuf(TXBuf, "abcdefghijklmno", 15);
-        sendByte(removeItem(TXBuf));
-    }
-    P5->IFG = 0;
-}
-
-void PORT3_IRQHandler() {
-    if (P3->IFG & BIT5) {
-        P2->OUT &= ~(BIT0 | BIT1 | BIT2);
-        P2->OUT ^= BIT1;
-    }
-    P3->IFG = 0;
+    //Enable interrupts at the NVIC for the port
+    NVIC_EnableIRQ(PORT1_IRQn);
 }
 
 /*
-void borrowBike() {
+ * This is the lock button's handler function.  This is where we register the button's inputs so we can have effective output
+ */
+void PORT1_IRQHandler(){
+    //Handler for the Admin Button
+    if(P1->IFG & BIT1){
+        SIDReady = 1;
+        newSID[0] = '1';
+        newSID[1] = '2';
+        newSID[2] = '3';
+        newSID[3] = '4';
+    }
 
-     * 1. LCD Screen
-     * 2. Time Select
-     * 3. Get RFID data / Student ID
-     * 4. Send data to bike lock
-     * 5. Return to default screen
-     *
+    //Handler for the Admin Button
+    if(P1->IFG & BIT4){
+        SIDReady = 1;
+        newSID[0] = '9';
+        newSID[1] = '9';
+        newSID[2] = '9';
+        newSID[3] = '9';
+    }
 
+    //Remove the port interrupt
+    P1->IFG = 0;
 }
-*/
+
