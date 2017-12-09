@@ -36,10 +36,16 @@ int main(void)
             thankYou();
             while(slideNum == 4);}
         if(slideNum == 5){
+            goBlack();
             noBikes();
             while(slideNum == 5);}
         if(slideNum == 6){
+            goBlue();
             error();
             while(slideNum == 6);}
+        if(slideNum == 7){
+            goBlack();
+            noDoubleDipping();
+            while(slideNum == 7);}
     }
 }
