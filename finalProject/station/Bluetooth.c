@@ -54,21 +54,6 @@ void bluetooth_send_n(uint8_t * data, uint8_t length){
     }
 }
 
-void sendRFIDData(uint8_t * rfiddata) {
-    uint8_t * newData = rfiddata;
-    bluetooth_send_n(newData, 16);
-}
-
-void sendDeleteRFID() {
-    uint8_t * deleteData = "0000000000000000";
-    bluetooth_send_n(deleteData, 16);
-}
-
-void heartbeat() {
-    uint8_t * hello = "helloXXXXXXXXXXX";
-    bluetooth_send_n(hello, 16);
-}
-
 void EUSCIA2_IRQHandler(){
     if (EUSCI_A2->IFG & BIT0){
         addItemCircBuf(RXBuf, EUSCI_A2->RXBUF);
