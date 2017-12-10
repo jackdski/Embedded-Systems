@@ -16,6 +16,9 @@
 extern CircBuf_t * TXBuf;
 extern CircBuf_t * RXBuf;
 
+extern volatile uint8_t registerStage;
+extern volatile uint8_t checkoutStage;
+
 void configButtons() {
     /*
      * Button Pins:
@@ -48,6 +51,13 @@ void configButtons() {
 }
 
 void configLED() {
+    // P1.0
+    P1->SEL0 &= ~(BIT0);
+    P1->SEL1 &= ~(BIT0);
+    P1->DIR |= BIT0;
+    P1->OUT &= ~BIT0;
+
+    // P2.0 & P2.1 & P2.2
     P2->SEL0 &=  ~(BIT0 | BIT1 | BIT2);
     P2->SEL1 &=  ~(BIT0 | BIT1 | BIT2);
     P2->DIR |=    (BIT0 | BIT1 | BIT2);
@@ -57,23 +67,18 @@ void configLED() {
 void PORT5_IRQHandler() {
     if (P5->IFG & BIT1) {
         //P2->OUT &= ~(BIT0 | BIT1 | BIT2);
-        P2->OUT ^= BIT0;
-        loadToBuf(TXBuf, "abcdefghijklmnop", 16);
-        //uint8_t * test = "abcdefghijklmnop";
-        EUSCI_A2->IFG |= BIT1;
-        //while(!isEmpty(TXBuf));
-        //resetCircBuf(TXBuf);
-
-        //bluetooth_send_n(test, 15);
-        sendByte(removeItem(TXBuf));
+        P1->OUT ^= BIT0;
+        checkoutStage++;
     }
     P5->IFG = 0;
 }
 
 void PORT3_IRQHandler() {
     if (P3->IFG & BIT5) {
-        P2->OUT &= ~(BIT0 | BIT1 | BIT2);
-        P2->OUT ^= BIT1;
+        //P2->OUT &= ~(BIT0 | BIT1 | BIT2);
+        //P2->OUT ^= BIT1;
+        P1->OUT ^= BIT0;
+        checkoutStage++;
     }
     P3->IFG = 0;
 }
