@@ -10,6 +10,7 @@
 #include "Buttons.h"
 #include "Bluetooth.h"
 #include "Circbuf.h"
+#include "Checkout.h"
 
 
 /*
@@ -30,18 +31,36 @@ CircBuf_t * TXBuf;
 CircBuf_t * RXBuf;
 CircBuf_t * RFIDBuf;
 
-volatile uint8_t hbCheck = 0; // if this starts with H
+// counts similar characters between what was received
+//      and the heartbeat message
+volatile uint8_t hbCheck = 0;
 
 /*
  * 0 = main screen
  * 1 = student ID has been entered
- * 2 = RFID tag data has been entered
+ * 2 = RFID tag data has been entered and saved
  */
 volatile uint8_t registerStage = 0;
+
+/*
+ * 0 = main screen
+ * 1 = RFID tag data has been entered and saved to RFIDBuf
+ * 2 = Time has been entered and saved
+ */
+volatile uint8_t checkoutStage = 0;
 
 // 1 if the station gets a HB message back
 // 0 otherwise
 volatile uint8_t receivedHB = 0;
+
+// 1 if timer has hit its limit
+volatile uint8_t timerFull = 0;
+
+volatile uint32_t checkoutTicks;
+//volatile uint32_t overtime;
+volatile uint8_t hours = 0;
+volatile uint8_t mins = 0;
+
 
 void main(void) {
     WDT_A->CTL = WDT_A_CTL_PW | WDT_A_CTL_HOLD;     // stop watchdog timer
@@ -50,26 +69,34 @@ void main(void) {
     configure_SystemClock();
     configLED();
     configure_Bluetooth();
+    configSystick();
 
+    // test valuse
+    uint8_t hours = 0;
+    uint8_t mins = 1;
+    // must get hours and mins input first
+    checkoutTicks = checkoutTimerTicks(hours, mins);
 
-    // User List
-    //userList = createList(300);
+    // Create buffers used
     TXBuf = createCircBuf(17);
     RXBuf = createCircBuf(17);
     RFIDBuf = createCircBuf(16);
 
+    // Heartbeat message
     uint8_t heartbeat[17] = "HXXXXXXXXXXXXXXXX";
 
-    P1->SEL0 &= ~(BIT0);
-    P1->SEL1 &= ~(BIT0);
-    P1->DIR |= BIT0;
-    P1->OUT |= BIT0;
+    // Cleared RFID message
+    uint8_t clearRFID[17] = "00000000000000000";
+
+    // Where the RFID data is stored
+    volatile uint8_t rfidData[17] = "00000000000000000";
 
     volatile uint8_t i;
     volatile uint8_t j;
-    volatile uint8_t rfidData[17] = "00000000000000000";
+    uint8_t rfidChecks[16];
 
-    loadToBuf(RXBuf,"HXXXXXXXXXXXXXXXX",17);
+    // hardcoded RFID test card
+    //loadToBuf(RXBuf,"HXXXXXXXXXXXXXXXX",17);
     uint8_t test[16];
     test[0]  = 0x02;
     test[1]  = 0x31;
@@ -92,6 +119,21 @@ void main(void) {
     }
 
     while(1) {
+        // registerStage == 2 initiates the station to send rfid data
+        if(checkoutStage == 2) {
+            loadToBuf(TXBuf, heartbeat, 17);
+            while(!(isEmpty(TXBuf))) {
+                sendByte(removeItem(TXBuf));
+            }
+            checkoutStage = 0; // reset and return to main screen/loop
+        }
+        // if timer limit has been reached
+        if(timerFull) {
+            loadToBuf(TXBuf, clearRFID, 17);
+            while(!(isEmpty(TXBuf))) {
+                sendByte(removeItem(TXBuf));
+            }
+        }
         // If RX buffer is fill check what is in it
         if(isFullCircBuf(RXBuf)) {
             // load rfidData with what is in RXBuf
@@ -105,36 +147,37 @@ void main(void) {
                 }
             }
             // if station receives heartbeat msg back, send RFID data
-            if((heartbeat[0] == 'H') && (hbCheck == 17)) {
-                /*
-                loadToBuf(TXBuf, "HXXXXXXXXXXXXXXXX", 17);
-                while(!(isEmpty(TXBuf))) {
-                    sendByte(removeItem(TXBuf));
+            if((rfidData[0] == 'H') && (hbCheck == 17)) {
+                for(j=0;j<16;j++) {
+                    // if characters do not match at any point resend rfid data
+                    rfidChecks[i] = RFIDBuf->buffer[i+1];
                 }
-                */
                 while(!(isEmpty(RFIDBuf))){
                     sendByte(removeItem(RFIDBuf));
                 }
+                loadToBuf(RFIDBuf, rfidChecks, 16);
             }
-            else{
-                uint8_t * rfidString;
-                for(j=1;j<17;j++){
-                    rfidString[j-1] = RXBuf->buffer[j];
+            // if not a heartbeat msg, check if it is the correct RFID data
+            // if not the correct RFID data, send the data again
+            //else if (rfidData[0] == 'R') {
+            if(rfidData[0] == 'R') {
+                //uint8_t checkReturnRFID = 0;
+                for(j=0;j<16;j++) {
+                    rfidChecks[i] = RFIDBuf->buffer[i+1];
                 }
-                loadToBuf(RFIDBuf, rfidString, 16);
-                //EUSCI_A2->IFG |= BIT1;
-                sendByte(removeItem(TXBuf));
+                for(j=0;j<16;j++) {     // run through and check each character
+                    // if characters do not match at any point resend rfid data
+                    if(rfidData[j+1] != rfidChecks[j]) {
+                        while(!(isEmpty(RFIDBuf))){
+                            sendByte(removeItem(RFIDBuf));
+                        }
+                        loadToBuf(RFIDBuf, rfidChecks, 16);
+                    }
+                }
+                // reset RXBuf since it has to receive something again
+                resetCircBuf(RXBuf);
             }
             hbCheck = 0;
-        }
-        // registerStage == 2 initiates the station to send rfid data
-        if((registerStage == 2) && (isFullCircBuf(RXBuf))) {
-            if(receivedHB) {
-                // assume RFIDBuf is already loaded
-                EUSCI_A2->IFG |= BIT1;
-                sendByte(removeItem(RFIDBuf));
-            }
-            registerStage == 0; // reset and return to main screen/loop
         }
     }
 }
