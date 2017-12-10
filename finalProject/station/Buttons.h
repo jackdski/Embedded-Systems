@@ -10,6 +10,6 @@
 #include "msp.h"
 
 //Function to configure the Lock Button
-void configure_LockButton();
+void configure_Buttons();
 
 #endif /* BUTTONS_H_ */

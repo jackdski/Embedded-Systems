@@ -7,9 +7,12 @@
 #include "RFID.h"
 #include "Circbuf.h"
 #include <stdlib.h>
+#include "State.h"
 
 extern CircBuf_t * RFIDBuf;
 extern uint8_t     newRFID;
+
+extern State stationState;
 
 
 /*
@@ -42,10 +45,15 @@ void configure_RFID(){
 void EUSCIA1_IRQHandler(){
 
     if (EUSCI_A1->IFG & BIT0){
-        addItemCircBuf(RFIDBuf, EUSCI_A1->RXBUF);
+        if(stationState == Standby){
+            addItemCircBuf(RFIDBuf, EUSCI_A1->RXBUF);
 
-        if(isFullCircBuf(RFIDBuf)){
-            newRFID = 1;
+            if(isFullCircBuf(RFIDBuf)){
+                newRFID = 1;
+            }
+        }
+        else{
+            EUSCI_A1->RXBUF;
         }
     }
 }
@@ -65,7 +73,6 @@ uint8_t compare_RFID(uint8_t RFIDA[16], uint8_t RFIDB[16]){
             return 0;
         }
     }
-    resetCircBuf(RFIDBuf);
     return 1;
 }
 

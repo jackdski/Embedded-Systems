@@ -23,9 +23,6 @@ Student_t * findStudent(uint8_t readRFID[16]){
 
     //Now that we know we need to search a list, we need to start searching it.
     Student_t * runner = registry;
-    if(compare_RFID(runner->RFID, readRFID)){
-        return runner;
-    }
 
     while(runner->prevUser){
         //If we find our RFID tag in the list, return the student that it is tied to
@@ -35,6 +32,9 @@ Student_t * findStudent(uint8_t readRFID[16]){
 
         //Otherwise iterate through the list
         runner = runner->prevUser;
+    }
+    if(compare_RFID(runner->RFID, readRFID) == 1){
+        return runner;
     }
 
     //If I didn't find a new student, return NULL to add to the front of the list
@@ -48,7 +48,10 @@ void registerStudent(uint8_t newRFID[16]){
     SIDReady = 0;
 
     //Once we have all of the student information, create the object and store the info
-    Student_t * newStudent = (Student_t *)malloc(sizeof(newStudent));
+    Student_t * newStudent = (Student_t *)malloc(sizeof(Student_t));
+    if(!newStudent)
+        return;
+
     stringCopy(newStudent->SID,newSID);
     stringCopy(newStudent->RFID,newRFID);
     newStudent->HASBIKE = 0;
