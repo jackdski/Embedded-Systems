@@ -4,13 +4,14 @@
  *
  */
 
-#include "Bluetooth.h"
-
 #include "msp.h"
+#include <stdint.h>
+#include "Bluetooth.h"
 #include "Circbuf.h"
 
 extern CircBuf_t * TXBuf;
 extern CircBuf_t * RXBuf;
+extern CircBuf_t * RFIDBuf;
 
 //Connect 9.7 to the RX
 void configure_Bluetooth(){
@@ -29,8 +30,9 @@ void configure_Bluetooth(){
     NVIC_EnableIRQ(EUSCIA3_IRQn);
 }
 
-void sendByte(uint8_t data){
+inline void sendByte(uint8_t data){
     EUSCI_A3->TXBUF = data;
+    while(!(EUSCI_A2->IFG & BIT1));
 }
 
 void bluetooth_send_n(uint8_t * data, uint8_t length){
@@ -46,7 +48,7 @@ void bluetooth_send_n(uint8_t * data, uint8_t length){
 
 void EUSCIA3_IRQHandler(){
     if (EUSCI_A3->IFG & BIT0){
-        P1->OUT ^= BIT0;
+        //P1->OUT ^= BIT0;
         addItemCircBuf(RXBuf, EUSCI_A3->RXBUF);
     }
     if (EUSCI_A3->IFG & BIT1){
@@ -55,6 +57,6 @@ void EUSCIA3_IRQHandler(){
             EUSCI_A3->IFG &= ~BIT1;
             return;
         }
-        //send_byte(removeItem(TXBuf));
+        sendByte(removeItem(TXBuf));
     }
 }
