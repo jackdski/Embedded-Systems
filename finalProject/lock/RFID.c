@@ -13,7 +13,7 @@
 
 extern CircBuf_t * RFIDBuf;
 extern State       lockState;
-extern uint8_t   * mainUser; // stores registered RFID data
+extern uint8_t     mainUser[16]; // stores registered RFID data
 extern uint8_t     newRFID;             // Flags that we have stored a new RFID tag
 
 
@@ -67,13 +67,13 @@ void EUSCIA2_IRQHandler(){
 //This function returns a boolean in order to determine if the new RFID string matches
 //Our registered user.  True is a match, false is they are different.
 uint8_t compare_RFID(){
-    volatile int i;
+    volatile uint8_t i;
 
     //Go through each letter of our stored userID.  If the id doesn't match the read tag
     //at any point, return false.  Otherwise return true when finished.
     for(i = 0; i < 16; i++){
         uint8_t main = mainUser[i];
-        uint8_t new  = removeItem(RFIDBuf);
+        uint8_t new  = RFIDBuf->buffer[i];//= removeItem(RFIDBuf);
         if(main != new){
             resetCircBuf(RFIDBuf);
             return 0;
