@@ -75,6 +75,9 @@ void main(void)
 
     // heartbeat message
     uint8_t heartbeat[17] = "HXXXXXXXXXXXXXXXX";
+    uint8_t warning[17] = "WXXXXXXXXXXXXXXXX";
+    uint8_t clearRFID[17] = "R0000000000000000";
+    //uint8_t testRFID[17] = "R1234567890abcd";
 
     //Initialize LED 1.0 for debug purposes
     P1->DIR |= BIT0;
@@ -84,6 +87,13 @@ void main(void)
     volatile uint8_t hbCheck = 0;
     volatile uint8_t i;
 
+        /*
+    // test stuff
+    loadToBuf(TXBuf, testRFID, 17);
+    if(!(isEmpty(TXBuf))) {
+        EUSCI_A3->IFG |= BIT1;
+    }
+    */
     while(1){
        if(lockState == Error){
            Red_LED_On();
@@ -116,20 +126,24 @@ void main(void)
              }
         }
        // if something has been received check here
-       if(!(isEmpty(RXBuf))) {
+       if(isFullCircBuf(RXBuf)) {
            for(i=0;i<17;i++) {
-               rfidData[i] = RXBuf->buffer[i+1];
+               rfidData[i] = RXBuf->buffer[i];
            }
-           for(i=0;i<17;i++) {
-               if(rfidData[i] == heartbeat[i]) {
-                   hbCheck++;
+           if(rfidData[0] == 'W') {
+               short_buzzes();
+               loadToBuf(TXBuf, rfidData, 17);
+               if(!(isEmpty(TXBuf))) {
+                   EUSCI_A3->IFG |= BIT1;
                }
+               resetCircBuf(RXBuf);
            }
            // if a heartbeat is received send it back
-           if((rfidData[0] == 'H') && (hbCheck == 17)) {
+           //if((rfidData[0] == 'H') && (hbCheck == 17)) {
+             if(rfidData[0] == 'H') {
                loadToBuf(TXBuf, heartbeat, 17);
-               while(!(isEmpty(TXBuf))) {
-                   sendByte(removeItem(TXBuf));
+               if(!(isEmpty(TXBuf))) {
+                   EUSCI_A3->IFG |= BIT1;
                }
                resetCircBuf(RXBuf);
            }
@@ -139,12 +153,11 @@ void main(void)
                    mainUser[i] = rfidData[i+1];
                }
                loadToBuf(TXBuf, rfidData, 17);
-               while(!(isEmpty(TXBuf))){
-                   sendByte(removeItem(TXBuf));
+               if(!(isEmpty(TXBuf))) {
+                   EUSCI_A3->IFG |= BIT1;
                }
                resetCircBuf(RXBuf);
            }
-           hbCheck = 0;
        }
     }
 }
