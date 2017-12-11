@@ -55,9 +55,9 @@ void TA1_0_IRQHandler() {
     //If solCount has reached 75, reset it, turn off the solenoid, and turn off the timer
     if(solCount == 75){
         solCount = 0;
-        if(lockState == Unlocked)
+        if(lockState == Unlocked || lockState == Unlockable){
             checkBeamBreak = 1;
-
+        }
         P6->OUT &= ~BIT1;
         TIMER_A1->CCTL[0] &= !TIMER_A_CCTLN_CCIE;      // TACCR0 interrupt disable
     }

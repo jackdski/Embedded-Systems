@@ -39,10 +39,10 @@ void checkAvailablility() {
         addItemCircBuf(TXBuf, ACKNOWLEDGE[i]);
     }
     if(mainuser == "0000000000000000") {
-        addItemCircBuf(TXBuf, "1");
+        addItemCircBuf(TXBuf, '1');
     }
     else {
-        addItemCircBuf(TXBuf, "0");
+        addItemCircBuf(TXBuf, '0');
     }
     bluetooth_send_n(TXBuf->buffer, 8);
 }
@@ -88,8 +88,6 @@ void registerNewUser() {
         sid[i-8] = RXBuf->buffer[i];
     }
     mainuser->studentId = stoi(sid);
-
-
     uint8_t * rfdata[16];
     for(i = 17; i < 33; i++) {
         rfdata[i] = RXBuf->buffer[i];

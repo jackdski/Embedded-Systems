@@ -12,6 +12,7 @@
 #include "RGB.h"
 
 extern State lockState;
+extern uint8_t RGBCount;
 
 /*
  * In order to configure the lock button, we need to set it as an input, enable internal resistors
@@ -44,6 +45,7 @@ void PORT1_IRQHandler(){
             long_buzz();
             pullLatch();
             LED_Off();
+            RGBCount = 0;
             Green_LED_On();
         }
         else{

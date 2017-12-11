@@ -7,8 +7,12 @@
 #include "State.h"
 #include "RGB.h"
 #include "BeamBreaks.h"
+#include "Buzzer.h"
 
 extern State lockState;
+extern uint8_t timedOut;
+extern uint8_t checkBeamBreak;
+extern uint8_t RGBCount;
 
 //This function configures Timer A3
 void configure_UnlockableTimer(){
@@ -21,6 +25,9 @@ void configure_UnlockableTimer(){
 void enterState(State newState){
     //Turn off the LEDs
     LED_Off();
+    timedOut = 0;
+    checkBeamBreak = 0;
+    RGBCount = 0;
 
     //Turn off the current state's features
     if(lockState == Error){
@@ -47,6 +54,8 @@ void enterState(State newState){
     else if(newState == Locked){
         //If we are in the lock state, breaking the beams unexpectedly is a major issue. This lets us set an interrupt to enter this state
         enable_BeamBreaks();
+        Red_LED_On();
+        long_buzz();
 
         //State Transition
         lockState = Locked;
