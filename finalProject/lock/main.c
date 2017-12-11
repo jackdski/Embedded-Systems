@@ -37,6 +37,26 @@ void main(void)
 
 	WDT_A->CTL = WDT_A_CTL_PW | WDT_A_CTL_HOLD;		// stop watchdog timer
 
+	/*//Delete This.  It is for debug purposes only
+	uint8_t test[16];
+	test[0]  = 0x02;
+	test[1]  = 0x31;
+	test[2]  = 0x38;
+	test[3]  = 0x30;
+	test[4]  = 0x30;
+	test[5]  = 0x38;
+	test[6]  = 0x33;
+	test[7]  = 0x43;
+	test[8]  = 0x44;
+	test[9]  = 0x34;
+	test[10] = 0x31;
+	test[11] = 0x31;
+	test[12] = 0x37;
+	test[13] = 0x0D;
+	test[14] = 0x0A;
+	test[15] = 0x03;
+	mainUser = test;*/
+
 	//Call all of our configuration functions
 	configure_SystemClock();
 	configure_Buzzer();
