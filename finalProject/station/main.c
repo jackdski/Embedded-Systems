@@ -10,7 +10,6 @@
 #include "Buttons.h"
 #include "Bluetooth.h"
 #include "Circbuf.h"
-#include "Checkout.h"
 
 
 /*
@@ -27,9 +26,12 @@ volatile CircBuf_t * RXBuf;
 volatile CircBuf_t * RFIDBuf;
 */
 
-CircBuf_t * TXBuf;
-CircBuf_t * RXBuf;
-CircBuf_t * RFIDBuf;
+volatile CircBuf_t * TXBuf;
+volatile CircBuf_t * RXBuf;
+volatile CircBuf_t * RFIDBuf;
+
+CircBuf_t * TESTtxBuf;
+CircBuf_t * TESTrxBuf;
 
 // counts similar characters between what was received
 //      and the heartbeat message
@@ -68,19 +70,22 @@ void main(void) {
     configButtons();
     configure_SystemClock();
     configLED();
-    configure_Bluetooth();
-    configSystick();
+    configure_serial_port();
+    configAltBT();
 
-    // test valuse
-    uint8_t hours = 0;
-    uint8_t mins = 1;
+    // test values
+    //uint8_t hours = 0;
+    //uint8_t mins = 1;
     // must get hours and mins input first
-    checkoutTicks = checkoutTimerTicks(hours, mins);
+    //checkoutTicks = checkoutTimerTicks(hours, mins);
 
     // Create buffers used
     TXBuf = createCircBuf(17);
     RXBuf = createCircBuf(17);
     RFIDBuf = createCircBuf(16);
+    TESTtxBuf = createCircBuf(17);
+    TESTrxBuf = createCircBuf(17);
+
 
     // Heartbeat message
     uint8_t heartbeat[17] = "HXXXXXXXXXXXXXXXX";
@@ -95,6 +100,7 @@ void main(void) {
     volatile uint8_t j;
     uint8_t rfidChecks[16];
 
+    /*
     // hardcoded RFID test card
     //loadToBuf(RXBuf,"HXXXXXXXXXXXXXXXX",17);
     uint8_t test[16];
@@ -117,13 +123,30 @@ void main(void) {
     for(j=0;j<16;j++) {
         addItemCircBuf(RFIDBuf, test[j]);
     }
+    */
+
+    /*
+    addItemCircBuf(TXBuf, 'H');
+    if(!isEmpty(TXBuf)){
+            EUSCI_A0->IFG |= BIT1;
+    }
+    uint8_t * check = *(RXBuf->head);
+    if(check == 'H') {
+        P2->OUT |= BIT0;
+    }
+    */
+
+    loadToBuf(TXBuf, heartbeat, 17);
+    if(!(isEmpty(TXBuf))){
+        EUSCI_A0->IFG |= BIT1;
+    }
 
     while(1) {
         // registerStage == 2 initiates the station to send rfid data
         if(checkoutStage == 2) {
             loadToBuf(TXBuf, heartbeat, 17);
             while(!(isEmpty(TXBuf))) {
-                sendByte(removeItem(TXBuf));
+                UART_send_byte(removeItem(TXBuf));
             }
             checkoutStage = 0; // reset and return to main screen/loop
         }
@@ -131,7 +154,7 @@ void main(void) {
         if(timerFull) {
             loadToBuf(TXBuf, clearRFID, 17);
             while(!(isEmpty(TXBuf))) {
-                sendByte(removeItem(TXBuf));
+                UART_send_byte(removeItem(TXBuf));
             }
         }
         // If RX buffer is fill check what is in it
@@ -150,12 +173,17 @@ void main(void) {
             if((rfidData[0] == 'H') && (hbCheck == 17)) {
                 for(j=0;j<16;j++) {
                     // if characters do not match at any point resend rfid data
-                    rfidChecks[i] = RFIDBuf->buffer[i+1];
+                    rfidChecks[j] = RFIDBuf->buffer[j+1];
+                    P2->IFG |= BIT2;
+                    P1->IFG |= BIT0;
                 }
                 while(!(isEmpty(RFIDBuf))){
-                    sendByte(removeItem(RFIDBuf));
+                    UART_send_byte(removeItem(RFIDBuf));
                 }
                 loadToBuf(RFIDBuf, rfidChecks, 16);
+                P1->OUT |= BIT1;
+                P2->OUT |= BIT1;
+                //resetCircBuf(RXBuf);
             }
             // if not a heartbeat msg, check if it is the correct RFID data
             // if not the correct RFID data, send the data again
@@ -169,13 +197,13 @@ void main(void) {
                     // if characters do not match at any point resend rfid data
                     if(rfidData[j+1] != rfidChecks[j]) {
                         while(!(isEmpty(RFIDBuf))){
-                            sendByte(removeItem(RFIDBuf));
+                            UART_send_byte(removeItem(RFIDBuf));
                         }
                         loadToBuf(RFIDBuf, rfidChecks, 16);
                     }
                 }
                 // reset RXBuf since it has to receive something again
-                resetCircBuf(RXBuf);
+                //resetCircBuf(RXBuf);
             }
             hbCheck = 0;
         }
