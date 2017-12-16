@@ -8,14 +8,16 @@
 #include <stdlib.h>
 #include "Student.h"
 
+//Import the head of the bikeList and the transmission flag
 extern Bike_t * bikeList;
 extern uint8_t  transmitFlag;
 
-
+//These values are used to populate the checkout time for a new user
 volatile uint8_t CTimeReady;
 volatile uint8_t CTime;
 volatile uint8_t CTimeSTR[3];
 
+//This function creates a bike and will append it to the linked list
 void makeBike(uint32_t newSN){
     //First make sure we don't have another bike with that SN in the list
     Bike_t * runner = bikeList;
@@ -45,6 +47,10 @@ void makeBike(uint32_t newSN){
     bikeList = newBike;
 }
 
+//When we check out bikes, this function blocks until the user finishes inputting their checkout time,
+//It then will iterate through the bike list looking for free bikes.  If it finds one it will store information
+//and begin the checkout process by flagging the bike for registration.  This process is completed once contact
+//With the bike has been made in our transmission logic back in the main.
 void checkOutBike(Student_t * newStudent){
 
     //Wait until the user has finished entering their checkout time
@@ -73,12 +79,12 @@ void checkOutBike(Student_t * newStudent){
     //Throw error screen.  We didn't find you a bike.
 }
 
-///Go through each
+///Go through each bike and check whether their checkout time now matches their rental time
 inline void flagDeregister(){
     //Make a Bike pointer to go through the bike list and check the state of their timers
     Bike_t * runner = bikeList;
     while(runner){
-        //If a bike is presently checkedOut and
+        //If a bike is presently checkedOut and is now overtime, flag it for a warning message
         if((runner->inUse == 1)&& (runner->bikeCounter > runner->checkOutTime)){
             runner->inUse = 3;
         }
