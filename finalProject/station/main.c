@@ -1,211 +1,162 @@
-/*
-* Wireless Bike Lock
-* main.c
-*
-* 11-12-17
-*/
+#include <stdlib.h>
 
 #include "msp.h"
-#include <stdint.h>
-#include "Buttons.h"
-#include "Bluetooth.h"
+#include "Student.h"
 #include "Circbuf.h"
+#include "State.h"
+#include "RFID.h"
+#include "SystemClock.h"
+#include "Buttons.h"
+#include "RTC.h"
+#include "Bike.h"
+#include "Logging.h"
+#include "Joystick.h"
+#include "Bluetooth.h"
 
 
-/*
- * Wireless Bike Lock Bluetooth Packet Structure
- *
- * [    MSGTYPE     |   RFIDDATA    ]
- * [    1 BYTE      |   16 BYTES    ]
- *              136 BITS
- *              17 BYTES
- */
-/*
-volatile CircBuf_t * TXBuf;
-volatile CircBuf_t * RXBuf;
+volatile Student_t * registry;
+volatile Bike_t    * bikeList;
+
 volatile CircBuf_t * RFIDBuf;
-*/
+volatile uint8_t     newRFID = 0;
 
-volatile CircBuf_t * TXBuf;
+volatile CircBuf_t * LOGBuf;
+volatile uint8_t LOGFlag;
+
 volatile CircBuf_t * RXBuf;
-volatile CircBuf_t * RFIDBuf;
+volatile CircBuf_t * TXBuf;
 
-CircBuf_t * TESTtxBuf;
-CircBuf_t * TESTrxBuf;
 
-// counts similar characters between what was received
-//      and the heartbeat message
-volatile uint8_t hbCheck = 0;
 
-/*
- * 0 = main screen
- * 1 = student ID has been entered
- * 2 = RFID tag data has been entered and saved
+volatile uint8_t  transmitFlag = 0;
+
+volatile State stationState;
+/**
+ * main.c
  */
-volatile uint8_t registerStage = 0;
+void main(void)
+{
+	WDT_A->CTL = WDT_A_CTL_PW | WDT_A_CTL_HOLD;		// stop watchdog timer
 
-/*
- * 0 = main screen
- * 1 = RFID tag data has been entered and saved to RFIDBuf
- * 2 = Time has been entered and saved
- */
-volatile uint8_t checkoutStage = 0;
+	//Initialize the registry to have no students
+	registry = NULL;
 
-// 1 if the station gets a HB message back
-// 0 otherwise
-volatile uint8_t receivedHB = 0;
-
-// 1 if timer has hit its limit
-volatile uint8_t timerFull = 0;
-
-volatile uint32_t checkoutTicks;
-//volatile uint32_t overtime;
-volatile uint8_t hours = 0;
-volatile uint8_t mins = 0;
+	configure_RFID();
+	configure_SystemClock();
+	configure_Buttons();
+	configure_RTC();
+	configure_TerminalUART();
+	configure_Joystick_TA0();
+	configure_Bluetooth();
+	configure_Systick();
 
 
-void main(void) {
-    WDT_A->CTL = WDT_A_CTL_PW | WDT_A_CTL_HOLD;     // stop watchdog timer
-    // configs
-    configButtons();
-    configure_SystemClock();
-    configLED();
-    configure_serial_port();
-    configAltBT();
 
-    // test values
-    //uint8_t hours = 0;
-    //uint8_t mins = 1;
-    // must get hours and mins input first
-    //checkoutTicks = checkoutTimerTicks(hours, mins);
+	makeBike(1234);
 
-    // Create buffers used
-    TXBuf = createCircBuf(17);
-    RXBuf = createCircBuf(17);
-    RFIDBuf = createCircBuf(16);
-    TESTtxBuf = createCircBuf(17);
-    TESTrxBuf = createCircBuf(17);
+	P1->DIR |= BIT0;
 
 
-    // Heartbeat message
-    uint8_t heartbeat[17] = "HXXXXXXXXXXXXXXXX";
+	//Create an RFIDBuffer to hold our 16 chars of RFID data
+	RFIDBuf = createCircBuf(16);
+	LOGBuf  = createCircBuf(600);
+	RXBuf   = createCircBuf(17);
+	TXBuf   = createCircBuf(17);
 
-    // Cleared RFID message
-    uint8_t clearRFID[17] = "00000000000000000";
+	enterState(Standby);
 
-    // Where the RFID data is stored
-    volatile uint8_t rfidData[17] = "00000000000000000";
+	while(1){
+	    if(transmitFlag && stationState == Standby){
+	        transmitFlag = 0;
+	        //loop through all of the bikes we have
+	        volatile Bike_t * myBike = bikeList;
 
-    volatile uint8_t i;
-    volatile uint8_t j;
-    uint8_t rfidChecks[16];
+	        while(myBike){
+	            //Depending on the state of the bike, vary the message sent
+	            //If bike is in state 0 or 1 send a heartbeat to see if it is connected
+	            if(myBike->inUse == 0 || myBike->inUse == 1){
+	                //I succeeded in making a connection
+	                if(send_Heartbeat()){
+	                    myBike->isPresent = 1;
+	                }
+	                //Else I failed to get a response
+	                else{
+	                    myBike->isPresent = 0;
+	                }
+	            }
+	            else if(myBike->inUse == 2){
+	                //If I registered the bike. Finish storing the information of the users
+	                if(send_RFID(myBike->user->RFID)){
+	                    //Tell the bike that it is now in use
+	                    myBike->inUse = 1;
+	                    //Pair the student with the bike
+	                    myBike->user->HASBIKE = myBike->SN;
+	                }
+	                else{
+	                    //Something went wrong, as this state should never be reached.
+	                    //Reset the bike's use
+	                    myBike->inUse = 0;
+	                }
+	            }
+	            else if(myBike->inUse == 3){
+	                //If I get a response, I am ready to deregister the bike at the next transmission
+	                if(send_Warning()){
+	                    myBike->inUse = 4;
+	                }
+	            }
+	            else if(myBike->inUse == 4){
+	                //If I get a response, the bike is now deregistered. Reset bike and student
+	                if(send_RFID("0000000000000000")){
+	                    myBike->user->HASBIKE = 0;
 
-    /*
-    // hardcoded RFID test card
-    //loadToBuf(RXBuf,"HXXXXXXXXXXXXXXXX",17);
-    uint8_t test[16];
-    test[0]  = 0x02;
-    test[1]  = 0x31;
-    test[2]  = 0x38;
-    test[3]  = 0x30;
-    test[4]  = 0x30;
-    test[5]  = 0x38;
-    test[6]  = 0x33;
-    test[7]  = 0x43;
-    test[8]  = 0x44;
-    test[9]  = 0x34;
-    test[10] = 0x31;
-    test[11] = 0x31;
-    test[12] = 0x37;
-    test[13] = 0x0D;
-    test[14] = 0x0A;
-    test[15] = 0x03;
-    for(j=0;j<16;j++) {
-        addItemCircBuf(RFIDBuf, test[j]);
-    }
-    */
+	                    myBike->inUse = 0;
+	                }
+	            }
+	            myBike = myBike->nextBike;
+	        }
+	    }
+	    if(newRFID){
+	        newRFID = 0;
 
-    /*
-    addItemCircBuf(TXBuf, 'H');
-    if(!isEmpty(TXBuf)){
-            EUSCI_A0->IFG |= BIT1;
-    }
-    uint8_t * check = *(RXBuf->head);
-    if(check == 'H') {
-        P2->OUT |= BIT0;
-    }
-    */
+	        //Create a string to hold our new data, and create an iterator to populate it
+	        uint8_t readRFID[16];
+	        uint8_t i = 0;
 
-    loadToBuf(TXBuf, heartbeat, 17);
-    if(!(isEmpty(TXBuf))){
-        EUSCI_A0->IFG |= BIT1;
-    }
+	        //Store each character in its corresponding place in the string and clear the buff.
+	        for(i = 0; i < 16; i++){
+	            readRFID[i] = removeItem(RFIDBuf);
+	        }
 
-    while(1) {
-        // registerStage == 2 initiates the station to send rfid data
-        if(checkoutStage == 2) {
-            loadToBuf(TXBuf, heartbeat, 17);
-            while(!(isEmpty(TXBuf))) {
-                UART_send_byte(removeItem(TXBuf));
-            }
-            checkoutStage = 0; // reset and return to main screen/loop
-        }
-        // if timer limit has been reached
-        if(timerFull) {
-            loadToBuf(TXBuf, clearRFID, 17);
-            while(!(isEmpty(TXBuf))) {
-                UART_send_byte(removeItem(TXBuf));
-            }
-        }
-        // If RX buffer is fill check what is in it
-        if(isFullCircBuf(RXBuf)) {
-            // load rfidData with what is in RXBuf
-            for(i=0;i<17;i++) {
-                rfidData[i] = RXBuf->buffer[i];
-            }
-            // count how many characters it has in common with the heartbeat msg
-            for(i=0;i<17;i++){
-                if(heartbeat[i] == rfidData[i]) {
-                    hbCheck++;
-                }
-            }
-            // if station receives heartbeat msg back, send RFID data
-            if((rfidData[0] == 'H') && (hbCheck == 17)) {
-                for(j=0;j<16;j++) {
-                    // if characters do not match at any point resend rfid data
-                    rfidChecks[j] = RFIDBuf->buffer[j+1];
-                    P2->IFG |= BIT2;
-                    P1->IFG |= BIT0;
-                }
-                while(!(isEmpty(RFIDBuf))){
-                    UART_send_byte(removeItem(RFIDBuf));
-                }
-                loadToBuf(RFIDBuf, rfidChecks, 16);
-                P1->OUT |= BIT1;
-                P2->OUT |= BIT1;
-                //resetCircBuf(RXBuf);
-            }
-            // if not a heartbeat msg, check if it is the correct RFID data
-            // if not the correct RFID data, send the data again
-            //else if (rfidData[0] == 'R') {
-            if(rfidData[0] == 'R') {
-                //uint8_t checkReturnRFID = 0;
-                for(j=0;j<16;j++) {
-                    rfidChecks[i] = RFIDBuf->buffer[i+1];
-                }
-                for(j=0;j<16;j++) {     // run through and check each character
-                    // if characters do not match at any point resend rfid data
-                    if(rfidData[j+1] != rfidChecks[j]) {
-                        while(!(isEmpty(RFIDBuf))){
-                            UART_send_byte(removeItem(RFIDBuf));
-                        }
-                        loadToBuf(RFIDBuf, rfidChecks, 16);
-                    }
-                }
-                // reset RXBuf since it has to receive something again
-                //resetCircBuf(RXBuf);
-            }
-            hbCheck = 0;
-        }
-    }
+
+            Student_t * activeStudent = findStudent(readRFID);
+
+	        //Check to see if we have already registered this student and enter the appropriate state
+	        if(!activeStudent){
+	            enterState(Register);
+	            activeStudent = registerStudent(readRFID);
+	        }
+
+	        //If we successfully registered the new student proceed to checkout
+	        if(activeStudent){
+	            if(activeStudent->HASBIKE){
+	                enterState(DoubleDipping);
+	            }
+	            else{
+	                enterState(SetTime);
+	                checkOutBike(activeStudent);
+	            }
+	        }
+
+	        enterState(Standby);
+
+
+	    }
+	    flagDeregister();
+
+	    if(LOGFlag){
+	        LOGFlag = 0;
+	        sendLog();
+	    }
+
+	}
 }
