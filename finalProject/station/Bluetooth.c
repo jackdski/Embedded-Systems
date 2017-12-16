@@ -9,29 +9,25 @@
 #include "Circbuf.h"
 #include <stdint.h>
 
+//The buffers used for bluetooth communication
 extern CircBuf_t * TXBuf;
 extern CircBuf_t * RXBuf;
-extern CircBuf_t * TESTtxBuf;
-extern CircBuf_t * TESTrxBuf;
 
 uint8_t systickcount;
 
+//Boolean indicating that the bikelock responded
 uint8_t gotResponse = 0;
 
+//The systick timer is used to timeout of transmissions if we don't recieve a response
 void configure_Systick() {
-    /*
-     * 500,000us == 0.5s
-     * f(t) = (t/12) *from Lab 2 write-up*
-     *  500,000 = (t/12)
-     *  t = 6,000,000
-     */
-
-    // starting value to count down from for 0.5s ticks
+    // starting value to count down from for 0.05s ticks
     SysTick->LOAD = 6000000;
     // Enable SysTick counter, interrupt, clock
     SysTick->CTRL = (BIT1 | BIT2);
 }
 
+//If the systick timer fires twice (approximatly 0.1 seconds)
+//Flag that we did not get a response and should proceed through the transmission logic
 void SysTick_Handler() {
     systickcount++;
     if(systickcount % 2) {
@@ -41,7 +37,7 @@ void SysTick_Handler() {
     }
 }
 
-//Connect 3.3 to the RX
+//Configure the UART Ports for bluetooth communication
 void configure_Bluetooth(){
     //Configure UART pins, set 2-UART pins to UART mode
     P9->SEL0 |=  (BIT6 | BIT7);
@@ -58,13 +54,15 @@ void configure_Bluetooth(){
     NVIC_EnableIRQ(EUSCIA3_IRQn);
 }
 
+//Send a single bit of data
 inline void BLUART_send_byte(uint8_t data){
     EUSCI_A3->TXBUF = data;
 }
 
-// use echo stuff to return data to station
+//The code controlling the transmission and reception of messages
 void EUSCIA3_IRQHandler(){
 
+    //If I recieve a message, flag that I got a response.
     if(EUSCI_A3->IFG & BIT0) {
         P1->OUT |= BIT0;
         addItemCircBuf(RXBuf,EUSCI_A3->RXBUF);
@@ -73,6 +71,7 @@ void EUSCIA3_IRQHandler(){
             gotResponse = 2;
         }
     }
+    //This code will transmit the entire TXBuf. It stops once the Buf is empty
     if (EUSCI_A3->IFG & BIT1){
         //Transmit Stuff
         if(isEmpty(TXBuf)){
@@ -83,6 +82,8 @@ void EUSCIA3_IRQHandler(){
     }
 }
 
+//This function sends a heartbeat message and enables the timer.
+//It then blocks until either the timer finishes or it gets a response.
 uint8_t send_Heartbeat(){
     //Set the response flag to zero and transmit
     gotResponse = 0;
@@ -94,9 +95,16 @@ uint8_t send_Heartbeat(){
     //block until either I get a response or the time finishes
     while(gotResponse == 0);
 
+    //This is used as a boolean function. gotResponse will be 1 for no response, and 2 for
+    //a recieved messsage.  Returning gotResponse -1 shifts these values down one to be better
+    //represented in main.
     return gotResponse - 1;
 }
 
+//This function sends an RFID message and enables the timer.
+//It automatically loads the relevant RFID data to be the 16 data chars of the message
+//If we are deregistering, this data will be entirely zeros
+//It then blocks until either the timer finishes or it gets a response.
 uint8_t send_RFID(uint8_t RFID[16]){
     //Set the response flag to zero and transmit
     gotResponse = 0;
@@ -109,9 +117,14 @@ uint8_t send_RFID(uint8_t RFID[16]){
     //block until either I get a response or the time finishes
     while(gotResponse == 0);
 
+    //This is used as a boolean function. gotResponse will be 1 for no response, and 2 for
+    //a recieved messsage.  Returning gotResponse -1 shifts these values down one to be better
+    //represented in main.
     return gotResponse - 1;
 }
 
+//This function sends a warning message and enables the timer.
+//It then blocks until either the timer finishes or it gets a response.
 uint8_t send_Warning(){
     //Set the response flag to zero and transmit
     gotResponse = 0;
@@ -123,5 +136,8 @@ uint8_t send_Warning(){
     //block until either I get a response or the time finishes
     while(gotResponse == 0);
 
+    //This is used as a boolean function. gotResponse will be 1 for no response, and 2 for
+    //a recieved messsage.  Returning gotResponse -1 shifts these values down one to be better
+    //represented in main.
     return gotResponse - 1;
 }
