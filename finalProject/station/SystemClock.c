@@ -6,6 +6,8 @@
  */
 #include "SystemClock.h"
 
+//In order to set our 9600 BAUD Rate for UART, we run the System clock at 12MHz. This function 
+//configures the system clock to run at that speed
 void configure_SystemClock(){
     CS-> KEY = 0x695A; //Unlock module for register access
     CS-> CTL0 = 0;     //Reset tuning parameters
