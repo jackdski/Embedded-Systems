@@ -12,7 +12,7 @@ extern CircBuf_t * LOGBuf;
 extern Student_t * registry;
 extern Bike_t    * bikeList;
 
-
+//Configures the relevant UART pins to communicate with the computer
 void configure_TerminalUART(){
     //Configure UART pins, set 2-UART pins to UART mode
     P1->SEL0 |=  (BIT2 | BIT3);
@@ -34,6 +34,7 @@ void configure_TerminalUART(){
     NVIC_EnableIRQ(EUSCIA0_IRQn);
 }
 
+//Turns a number into a string
 void itos(uint32_t num, int8_t size, uint8_t * str ) {
     int8_t i;
     i = size;
@@ -51,12 +52,13 @@ void itos(uint32_t num, int8_t size, uint8_t * str ) {
     }
 }
 
+//Loads the characters for a new line into the buffer
 void newLine(CircBuf_t * Buf){
     addItemCircBuf(Buf, 0x0A);
     addItemCircBuf(Buf, 0x0D);//size 34
 }
 
-
+//This function iterates through the linked list of studens and the list of bikes decoding and displaying all of their information
 void sendLog(){
     newLine(LOGBuf);
     //Label the first block of information
@@ -177,10 +179,12 @@ void sendLog(){
 
 }
 
+//Sends a byte over the terminal uart
 inline void Terminal_send_byte(uint8_t data){
     EUSCI_A0->TXBUF = data;
 }
 
+//This handler will send all of our LOGBuf data
 void EUSCIA0_IRQHandler(){
 
     if (EUSCI_A0->IFG & BIT1){
